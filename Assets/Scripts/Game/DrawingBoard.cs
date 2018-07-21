@@ -4,8 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
 using UnityEngine.Networking;
-using UnityEngine.Profiling;
-using Unity.Collections;
 
 [NetworkSettings(channel = 2, sendInterval = SEND_INTERVAL)]
 public class DrawingBoard : NetworkBehaviour {
@@ -13,24 +11,70 @@ public class DrawingBoard : NetworkBehaviour {
   public const float INTERP_BUFFER = 1.0f / 40.0f;
 
   public int resolutionX, resolutionY;
-  public Image image;
+  public int maxActionsPerFrame = 20;
+  public Image boardImage;
+  public Image previewImagePrefab;
 
-  private DrawableCanvas _canvas;
+  private DrawableCanvas _boardCanvas;
+
+  private Dictionary<uint, Image> _previewImages = new Dictionary<uint, Image>();
+  private Dictionary<uint, DrawableCanvas> _previewCanvases = new Dictionary<uint, DrawableCanvas>();
 
   private float _recieveTime;
   private float _firstRecieveTimestamp;
   private Queue<BrushAction> _toSendQueue = new Queue<BrushAction>();
   private Queue<BrushAction> _toDrawQueue = new Queue<BrushAction>();
 
-  private void Awake() {
-    _canvas = new DrawableCanvas(resolutionX, resolutionY);
+  private float _latestBrushTimestamp;
+  private float _latestBrushDisplayTime;
 
-    var sprite = Sprite.Create(_canvas.texture, new Rect(0, 0, resolutionX, resolutionY), Vector2.zero);
-    image.sprite = sprite;
+  public float boardTimestamp {
+    get {
+      return (Time.realtimeSinceStartup - _latestBrushDisplayTime) + _latestBrushTimestamp;
+    }
+  }
+
+  private void Awake() {
+    _boardCanvas = new DrawableCanvas(resolutionX, resolutionY);
+
+    var sprite = Sprite.Create(_boardCanvas.texture, new Rect(0, 0, resolutionX, resolutionY), Vector2.zero);
+    boardImage.sprite = sprite;
   }
 
   private void OnDestroy() {
-    _canvas.Dispose();
+    _boardCanvas.Dispose();
+
+    foreach (var canvas in _previewCanvases.Values) {
+      canvas.Dispose();
+    }
+  }
+
+  private Image getPreviewImage(NetworkInstanceId player) {
+    Image image;
+    if (!_previewImages.TryGetValue(player.Value, out image)) {
+      image = Instantiate(previewImagePrefab);
+
+      image.transform.SetParent(transform.parent, worldPositionStays: true);
+      image.transform.localPosition = previewImagePrefab.transform.localPosition;
+
+      image.gameObject.SetActive(true);
+      _previewImages[player.Value] = image;
+    }
+
+    return image;
+  }
+
+  private DrawableCanvas getPreviewCanvas(NetworkInstanceId player) {
+    DrawableCanvas canvas;
+    if (!_previewCanvases.TryGetValue(player.Value, out canvas)) {
+      canvas = new DrawableCanvas(resolutionX, resolutionY);
+      _previewCanvases[player.Value] = canvas;
+
+      var sprite = Sprite.Create(canvas.texture, new Rect(0, 0, resolutionX, resolutionY), Vector2.zero);
+      getPreviewImage(player).sprite = sprite;
+    }
+
+    return canvas;
   }
 
   [Server]
@@ -40,18 +84,41 @@ public class DrawingBoard : NetworkBehaviour {
     SetDirtyBit(1);
 
     if (isServer) {
-      _canvas.ApplyBrushAction(action);
+      _toDrawQueue.Enqueue(action);
+      //drawBrushActionToCanvases(action);
+    }
+  }
+
+  [Server]
+  public void ClearAndReset() {
+    ApplyBrushAction(new BrushAction() {
+      type = BrushActionType.Clear,
+      drawerId = Player.local.netId
+    });
+
+    foreach (var player in Player.all) {
+      ApplyBrushAction(new BrushAction() {
+        type = BrushActionType.Line,
+        position0 = new Vector2Int(-100, -100),
+        position1 = new Vector2Int(-100, -100),
+        size = 0,
+        drawerId = player.netId,
+        isPreview = true
+      });
     }
   }
 
   [Client]
   public void PredictBrushAction(BrushAction action) {
     Assert.AreEqual(action.drawerId, Player.local.netId);
-    _canvas.ApplyBrushAction(action);
+    drawBrushActionToCanvases(action);
   }
 
   [ClientCallback]
   private void Update() {
+
+
+
     while (_toDrawQueue.Count > 0) {
       var action = _toDrawQueue.Peek();
 
@@ -62,7 +129,7 @@ public class DrawingBoard : NetworkBehaviour {
       }
 
       if ((action.time + SEND_INTERVAL + INTERP_BUFFER) < GameCoordinator.instance.gameTime) {
-        _canvas.ApplyBrushAction(action);
+        drawBrushActionToCanvases(action);
         _toDrawQueue.Dequeue();
       } else {
         break;
@@ -84,34 +151,25 @@ public class DrawingBoard : NetworkBehaviour {
     deserializeBrushActions(reader);
   }
 
+  private void drawBrushActionToCanvases(BrushAction action) {
+    var previewCanvas = getPreviewCanvas(action.drawerId);
+    previewCanvas.Clear(new Color32(0, 0, 0, 0));
+    if (action.isPreview) {
+      previewCanvas.ApplyBrushAction(action);
+    } else {
+      _boardCanvas.ApplyBrushAction(action);
+    }
+  }
+
   private void serializeBrushActions(NetworkWriter writer) {
-    writer.WritePackedUInt32((uint)_toSendQueue.Count);
-    while (_toSendQueue.Count > 0) {
+    int toSend = Mathf.Min(maxActionsPerFrame, _toSendQueue.Count);
+
+    writer.WritePackedUInt32((uint)toSend);
+
+    while (toSend != 0) {
       var action = _toSendQueue.Dequeue();
-
-      writer.Write(action.drawerId);
-      writer.Write((byte)action.type);
-      writer.Write(action.time);
-
-      switch (action.type) {
-        case BrushActionType.Clear:
-          break;
-        case BrushActionType.Line:
-        case BrushActionType.Box:
-        case BrushActionType.Oval:
-          writer.Write((ushort)action.position0.x);
-          writer.Write((ushort)action.position0.y);
-          writer.Write((ushort)action.position1.x);
-          writer.Write((ushort)action.position1.y);
-          writer.Write(action.color);
-          writer.Write((byte)action.size);
-          break;
-        case BrushActionType.FloodFill:
-          writer.Write((ushort)action.position0.x);
-          writer.Write((ushort)action.position0.y);
-          writer.Write(action.color);
-          break;
-      }
+      action.Serialize(writer);
+      toSend--;
     }
   }
 
@@ -119,31 +177,7 @@ public class DrawingBoard : NetworkBehaviour {
     int count = (int)reader.ReadPackedUInt32();
     for (int i = 0; i < count; i++) {
       BrushAction action = new BrushAction();
-
-      action.drawerId = reader.ReadNetworkId();
-      action.type = (BrushActionType)reader.ReadByte();
-      action.time = reader.ReadSingle();
-
-      switch (action.type) {
-        case BrushActionType.Clear:
-          break;
-        case BrushActionType.Line:
-        case BrushActionType.Box:
-        case BrushActionType.Oval:
-          action.x0 = (short)reader.ReadUInt16();
-          action.y0 = (short)reader.ReadUInt16();
-          action.x1 = (short)reader.ReadUInt16();
-          action.y1 = (short)reader.ReadUInt16();
-          action.color = reader.ReadColor32();
-          action.size = (byte)reader.ReadByte();
-          break;
-        case BrushActionType.FloodFill:
-          action.x0 = (short)reader.ReadUInt16();
-          action.y0 = (short)reader.ReadUInt16();
-          action.color = reader.ReadColor32();
-          break;
-      }
-
+      action.Deserialize(reader);
       _toDrawQueue.Enqueue(action);
     }
   }

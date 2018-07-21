@@ -35,12 +35,6 @@ public class GameCoordinator : NetworkBehaviour {
     get { return _drawingBoard; }
   }
 
-  [SerializeField]
-  private PreviewBoard _previewBoard;
-  public PreviewBoard previewBoard {
-    get { return _previewBoard; }
-  }
-
   [Header("Game Data")]
   [SyncVar, SerializeField]
   private GameState _gameState = GameState.Lobby;
@@ -170,8 +164,6 @@ public class GameCoordinator : NetworkBehaviour {
   private void Start() {
     if (isClient) {
       Paintbrush.OnDraw += OnDraw;
-      Paintbrush.OnPreview += previewBoard.HandlePreviewAction;
-      Paintbrush.OnClearPreview += previewBoard.ClearPreviewBoard;
     }
 
     if (isServer) {
@@ -196,10 +188,10 @@ public class GameCoordinator : NetworkBehaviour {
   private float _serverTimeLeft;
 
   private void OnDraw(BrushAction brush) {
-    if (CanPlayerDraw(Player.local)) {
-      brush.drawerId = Player.local.netId;
-      _drawingBoard.PredictBrushAction(brush);
+    brush.drawerId = Player.local.netId;
 
+    if (CanPlayerDraw(Player.local)) {
+      _drawingBoard.PredictBrushAction(brush);
       Player.local.CmdDraw(brush);
     }
   }
@@ -435,7 +427,7 @@ public class GameCoordinator : NetworkBehaviour {
 
     //If the guess is correct
     if (WordUtility.DoesGuessMatch(message.text, currentWord)) {
-      _currentWordTransaction.NotifyGuess(1 - message.timestamp / TIME_PER_CLASSIC_TURN);
+      _currentWordTransaction.NotifyGuess(1 - message.timeLeft / TIME_PER_CLASSIC_TURN);
 
       //Send the message only to the player who guessed
       messageBoard.TargetSubmitMessage(player.connectionToClient, message);
@@ -555,9 +547,7 @@ public class GameCoordinator : NetworkBehaviour {
       player.timerHasReachedZero = false;
     }
 
-    drawingBoard.ApplyBrushAction(new BrushAction() {
-      type = BrushActionType.Clear
-    });
+    drawingBoard.ClearAndReset();
 
     _serverTimeLeft = TIME_PER_CLASSIC_TURN;
     RpcUpdateTimeLeft(_serverTimeLeft, forceUpdate: true);

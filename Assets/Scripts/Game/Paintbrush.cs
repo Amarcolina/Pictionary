@@ -11,6 +11,7 @@ public struct BrushAction {
   public Color32 color;
   public int size;
   public float time;
+  public bool isPreview;
 
   public Vector2Int position0 {
     get {
@@ -31,6 +32,62 @@ public struct BrushAction {
       y1 = value.y;
     }
   }
+
+  public void Serialize(NetworkWriter writer) {
+    writer.Write(drawerId);
+    writer.Write((byte)type);
+    writer.Write(time);
+    writer.Write(isPreview);
+
+    switch (type) {
+      case BrushActionType.Clear:
+        break;
+      case BrushActionType.Line:
+      case BrushActionType.Box:
+      case BrushActionType.Oval:
+      case BrushActionType.PreviewBox:
+        writer.Write((ushort)position0.x);
+        writer.Write((ushort)position0.y);
+        writer.Write((ushort)position1.x);
+        writer.Write((ushort)position1.y);
+        writer.Write(color);
+        writer.Write((byte)size);
+        break;
+      case BrushActionType.FloodFill:
+        writer.Write((ushort)position0.x);
+        writer.Write((ushort)position0.y);
+        writer.Write(color);
+        break;
+    }
+  }
+
+  public void Deserialize(NetworkReader reader) {
+    drawerId = reader.ReadNetworkId();
+    type = (BrushActionType)reader.ReadByte();
+    time = reader.ReadSingle();
+    isPreview = reader.ReadBoolean();
+
+    switch (type) {
+      case BrushActionType.Clear:
+        break;
+      case BrushActionType.Line:
+      case BrushActionType.Box:
+      case BrushActionType.Oval:
+      case BrushActionType.PreviewBox:
+        x0 = (short)reader.ReadUInt16();
+        y0 = (short)reader.ReadUInt16();
+        x1 = (short)reader.ReadUInt16();
+        y1 = (short)reader.ReadUInt16();
+        color = reader.ReadColor32();
+        size = (byte)reader.ReadByte();
+        break;
+      case BrushActionType.FloodFill:
+        x0 = (short)reader.ReadUInt16();
+        y0 = (short)reader.ReadUInt16();
+        color = reader.ReadColor32();
+        break;
+    }
+  }
 }
 
 public enum BrushActionType {
@@ -38,13 +95,12 @@ public enum BrushActionType {
   Line = 1,
   Box = 2,
   Oval = 3,
-  FloodFill = 4
+  FloodFill = 4,
+  PreviewBox = 5
 }
 
 public class Paintbrush : MonoBehaviour {
 
-  public static Action<BrushAction> OnPreview;
-  public static Action OnClearPreview;
   public static Action<BrushAction> OnDraw;
 
   public enum Tool {
@@ -107,30 +163,18 @@ public class Paintbrush : MonoBehaviour {
   }
 
   private void Update() {
-    if (OnClearPreview != null) {
-      OnClearPreview();
-    }
-
     if (isInsideCanvas(currCursor)) {
       size = Mathf.Clamp(size - Input.mouseScrollDelta.y * scrollSensitivity, 0, maxBrushSize);
+    }
 
-      if (OnPreview != null && !currHeld && GameCoordinator.instance.CanPlayerDraw(Player.local)) {
-        OnPreview(new BrushAction() {
-          type = BrushActionType.Line,
-          position0 = currCursor,
-          position1 = currCursor,
-          size = intSize,
-          color = color
-        });
-
-        OnPreview(new BrushAction() {
-          type = BrushActionType.Box,
-          position0 = currCursor - new Vector2Int(intSize, intSize),
-          position1 = currCursor + new Vector2Int(intSize, intSize),
-          size = 0,
-          color = new Color(0, 0, 0, 1)
-        });
-      }
+    if (OnDraw != null && !currHeld && GameCoordinator.instance.CanPlayerDraw(Player.local)) {
+      OnDraw(new BrushAction() {
+        type = BrushActionType.PreviewBox,
+        position0 = currCursor,
+        size = intSize,
+        color = color,
+        isPreview = true
+      });
     }
   }
 
@@ -167,21 +211,18 @@ public class Paintbrush : MonoBehaviour {
 
       //Draw a preview of the action while the cursor is held
       while (currHeld) {
-        if (OnPreview != null) {
-          OnPreview(new BrushAction() {
+        if (OnDraw != null) {
+          OnDraw(new BrushAction() {
             type = (BrushActionType)tool,
             position0 = startCursor,
             position1 = currCursor,
             color = color,
-            size = intSize
+            size = intSize,
+            isPreview = true
           });
         }
 
         yield return null;
-      }
-
-      if (OnClearPreview != null) {
-        OnClearPreview();
       }
 
       if (OnDraw != null) {

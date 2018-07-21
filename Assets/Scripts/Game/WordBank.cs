@@ -59,8 +59,11 @@ public class WordTransaction {
     if (_guessTimes.Count == _playerCount) {
       throw new InvalidOperationException("There have already been the maximum number of guesses reported.");
     }
+
     if (guessTime < 0 || guessTime > 1) {
-      throw new ArgumentException("The guess time must be within the 0-1 range.");
+      float newTime = Mathf.Clamp01(guessTime);
+      Debug.LogWarning("The guess time of " + guessTime + " has been clamped to " + newTime);
+      guessTime = newTime;
     }
 
     _guessTimes.Add(guessTime);

@@ -149,6 +149,13 @@ public class DrawableCanvas : IDisposable {
       case BrushActionType.FloodFill:
         Fill(action.position0, action.color);
         break;
+      case BrushActionType.PreviewBox:
+        DrawLine(action.position0, action.position0, action.color, action.size);
+        DrawBox(action.position0 - new Vector2Int(action.size, action.size),
+                action.position0 + new Vector2Int(action.size, action.size),
+                new Color32(0, 0, 0, 255),
+                0);
+        break;
       default:
         throw new ArgumentException("Unexpected brush type " + action.type);
     }

@@ -8,6 +8,7 @@ using UnityEngine.Networking;
 public struct Message {
   public NetworkInstanceId netId;
   public float timestamp;
+  public float timeLeft;
   public string text;
   public Color32 color;
   public bool bold;
@@ -26,6 +27,7 @@ public struct Message {
     return new Message() {
       netId = Player.local.netId,
       timestamp = GameCoordinator.instance.gameTime,
+      timeLeft = GameCoordinator.instance.timeLeft,
       text = text,
       color = new Color(0, 0, 0, 1),
       bold = false
