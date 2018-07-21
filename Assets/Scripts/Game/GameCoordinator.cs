@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 
 public class GameCoordinator : NetworkBehaviour {
   public const int MIN_TURNS_PER_CLASSIC_GAME = 5;
-  public const float TIME_PER_CLASSIC_TURN = 3;
+  public const float TIME_PER_CLASSIC_TURN = 120;
 
   private static GameCoordinator _cachedInstance;
   public static GameCoordinator instance {
@@ -348,6 +348,31 @@ public class GameCoordinator : NetworkBehaviour {
     }
 
     startNextTurn();
+  }
+
+  [Server]
+  public void RejectCurrentWord(NetworkInstanceId clickerId) {
+    Player clickingPlayer = Player.all.FirstOrDefault(p => p.netId == clickerId);
+    if (clickingPlayer == null) {
+      Debug.LogError("Could not find player with id " + clickerId);
+      return;
+    }
+
+    //If the clicking player is also the drawing player
+    //And as long as nobody has guessed yet
+    if (clickingPlayer == drawingPlayer && Player.all.All(p => !p.hasGuessed)) {
+      //First we let everybody know the word has been rejected, and what the word was
+      messageBoard.RpcSubmitMessage(Message.Server(clickingPlayer.gameName + " has rejected the word " + currentWord + "."));
+
+      //Then we record the rejection in the current word transaction, and complete the transaction
+      _currentWordTransaction.Reject(1.0f - _serverTimeLeft / TIME_PER_CLASSIC_TURN);
+      _currentWordTransaction.CompleteTransaction();
+      _currentWordTransaction = null;
+      _wordBankManager.SaveActiveWordBank();
+
+      //Then we (re)start the turn
+      startNextTurn();
+    }
   }
 
   private void classicUpdate() {

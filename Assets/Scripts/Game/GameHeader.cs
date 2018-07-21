@@ -83,7 +83,8 @@ public class GameHeader : MonoBehaviour {
         break;
       case GameCoordinator.GameState.ClassicGame:
         if (GameCoordinator.instance.drawingPlayer == Player.local) {
-          wordLabel.text = GameCoordinator.instance.currentWord;
+          string[] tokens = GameCoordinator.instance.currentWord.Split();
+          wordLabel.text = string.Join(" ", tokens.Select(t => char.ToUpper(t[0]) + t.Substring(1)).ToArray());
         } else {
           wordLabel.text = "";
         }
@@ -107,5 +108,9 @@ public class GameHeader : MonoBehaviour {
     } else {
       Player.local.CmdPauseGame();
     }
+  }
+
+  public void OnClickRejectWord() {
+    Player.local.CmdRejectWord(Player.local.netId);
   }
 }

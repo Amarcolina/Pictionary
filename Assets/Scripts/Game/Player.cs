@@ -94,6 +94,11 @@ public class Player : NetworkBehaviour {
   }
 
   [Command]
+  public void CmdRejectWord(NetworkInstanceId clickerId) {
+    GameCoordinator.instance.RejectCurrentWord(clickerId);
+  }
+
+  [Command]
   public void CmdPauseGame() {
     GameCoordinator.instance.SubmitPauseGame();
   }
