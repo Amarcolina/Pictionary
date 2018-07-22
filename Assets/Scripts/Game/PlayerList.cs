@@ -16,7 +16,7 @@ public class PlayerList : NetworkBehaviour {
 
   [ClientCallback]
   private void OnDisable() {
-    Player.OnPlayerChange += updatePlayerList;
+    Player.OnPlayerChange -= updatePlayerList;
   }
 
   [Client]

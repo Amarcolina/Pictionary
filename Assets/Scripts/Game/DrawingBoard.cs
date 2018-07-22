@@ -144,6 +144,10 @@ public class DrawingBoard : NetworkBehaviour {
       var player = pair.Key;
       var queue = pair.Value;
 
+      if (player == Player.local.netId) {
+        continue;
+      }
+
       BrushAction? lastAction = null;
 
       int actionsTaken = 0;
@@ -155,7 +159,7 @@ public class DrawingBoard : NetworkBehaviour {
           _latestBrushTimestamp = Mathf.Max(_latestBrushTimestamp, action.time);
           _latestBrushDisplayTime = Mathf.Max(_latestBrushDisplayTime, GameCoordinator.instance.gameTime);
 
-          drawBrushActionToCanvases(action);
+          _boardCanvas.ApplyBrushAction(action);
           actionsTaken++;
 
           if (actionsTaken >= maxActionsPerFrame) {
@@ -165,9 +169,10 @@ public class DrawingBoard : NetworkBehaviour {
       }
 
       if (lastAction.HasValue && lastAction.Value.isPreview) {
-        _previewCanvases[player.Value].ApplyBrushAction(lastAction.Value);
-      } else {
-        _previewCanvases[player.Value].Clear();
+        getPreviewCanvas(player).Clear(new Color32(0, 0, 0, 0));
+        getPreviewCanvas(player).ApplyBrushAction(lastAction.Value);
+      } else if (actionsTaken > 0) {
+        getPreviewCanvas(player).Clear(new Color32(0, 0, 0, 0));
       }
     }
   }
