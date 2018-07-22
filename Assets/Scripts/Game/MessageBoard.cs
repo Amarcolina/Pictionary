@@ -7,7 +7,7 @@ using UnityEngine.Networking;
 
 public struct Message {
   public NetworkInstanceId netId;
-  public float timestamp;
+  public float boardDisplayTime;
   public float timeLeft;
   public string text;
   public Color32 color;
@@ -16,7 +16,7 @@ public struct Message {
   public static Message Server(string text) {
     return new Message() {
       netId = NetworkInstanceId.Invalid,
-      timestamp = 0,
+      boardDisplayTime = 0,
       text = text,
       color = new Color(0.7f, 0, 0, 1),
       bold = true
@@ -26,7 +26,7 @@ public struct Message {
   public static Message User(string text) {
     return new Message() {
       netId = Player.local.netId,
-      timestamp = GameCoordinator.instance.gameTime,
+      boardDisplayTime = GameCoordinator.instance.drawingBoard.boardDisplayTime,
       timeLeft = GameCoordinator.instance.timeLeft,
       text = text,
       color = new Color(0, 0, 0, 1),

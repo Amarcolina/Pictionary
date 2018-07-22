@@ -23,14 +23,16 @@ public class DrawingBoard : NetworkBehaviour {
   private float _recieveTime;
   private float _firstRecieveTimestamp;
   private Queue<BrushAction> _toSendQueue = new Queue<BrushAction>();
+
   private Queue<BrushAction> _toDrawQueue = new Queue<BrushAction>();
+  private Dictionary<NetworkInstanceId, Queue<BrushAction>> _toDrawQueues = new Dictionary<NetworkInstanceId, Queue<BrushAction>>();
 
   private float _latestBrushTimestamp;
   private float _latestBrushDisplayTime;
 
-  public float boardTimestamp {
+  public float boardDisplayTime {
     get {
-      return (Time.realtimeSinceStartup - _latestBrushDisplayTime) + _latestBrushTimestamp;
+      return (GameCoordinator.instance.gameTime - _latestBrushDisplayTime) + _latestBrushTimestamp;
     }
   }
 
@@ -85,7 +87,6 @@ public class DrawingBoard : NetworkBehaviour {
 
     if (isServer) {
       _toDrawQueue.Enqueue(action);
-      //drawBrushActionToCanvases(action);
     }
   }
 
@@ -116,9 +117,6 @@ public class DrawingBoard : NetworkBehaviour {
 
   [ClientCallback]
   private void Update() {
-
-
-
     while (_toDrawQueue.Count > 0) {
       var action = _toDrawQueue.Peek();
 
@@ -129,10 +127,47 @@ public class DrawingBoard : NetworkBehaviour {
       }
 
       if ((action.time + SEND_INTERVAL + INTERP_BUFFER) < GameCoordinator.instance.gameTime) {
-        drawBrushActionToCanvases(action);
+        Queue<BrushAction> queue;
+        if (!_toDrawQueues.TryGetValue(action.drawerId, out queue)) {
+          queue = new Queue<BrushAction>();
+          _toDrawQueues[action.drawerId] = queue;
+        }
+
+        queue.Enqueue(action);
         _toDrawQueue.Dequeue();
       } else {
         break;
+      }
+    }
+
+    foreach (var pair in _toDrawQueues) {
+      var player = pair.Key;
+      var queue = pair.Value;
+
+      BrushAction? lastAction = null;
+
+      int actionsTaken = 0;
+      while (queue.Count > 0) {
+        var action = queue.Dequeue();
+        lastAction = action;
+
+        if (!action.isPreview) {
+          _latestBrushTimestamp = Mathf.Max(_latestBrushTimestamp, action.time);
+          _latestBrushDisplayTime = Mathf.Max(_latestBrushDisplayTime, GameCoordinator.instance.gameTime);
+
+          drawBrushActionToCanvases(action);
+          actionsTaken++;
+
+          if (actionsTaken >= maxActionsPerFrame) {
+            break;
+          }
+        }
+      }
+
+      if (lastAction.HasValue && lastAction.Value.isPreview) {
+        _previewCanvases[player.Value].ApplyBrushAction(lastAction.Value);
+      } else {
+        _previewCanvases[player.Value].Clear();
       }
     }
   }

@@ -238,7 +238,7 @@ public class GameCoordinator : NetworkBehaviour {
     if (tokens[0] == "/help") {
       messageBoard.TargetSubmitMessage(player.connectionToClient, new Message() {
         netId = NetworkInstanceId.Invalid,
-        timestamp = 0,
+        boardDisplayTime = 0,
         color = new Color32(0, 0, 0, 0),
         bold = false,
         text =
@@ -435,7 +435,7 @@ public class GameCoordinator : NetworkBehaviour {
       //Don't submit the actual message to the rest, just tell everyone that they have guessed correctly
       messageBoard.RpcSubmitMessage(Message.Server("Player " + player.gameName + " has guessed!"));
 
-      player.guessTime = message.timestamp;
+      player.guessTime = message.boardDisplayTime;
       player.hasGuessed = true;
 
       //If all guessing players have guessed, start next turn
