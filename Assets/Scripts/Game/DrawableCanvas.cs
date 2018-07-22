@@ -19,6 +19,7 @@ public class DrawableCanvas : IDisposable {
 #endif
 
   private Texture2D _tex;
+  private int _width, _height;
   private NativeArray<int> _ids;
 
   private bool _isDirty = false;
@@ -40,6 +41,9 @@ public class DrawableCanvas : IDisposable {
     if (height <= 0) {
       throw new ArgumentException("The height of a DrawableCanvas must be greater than zero.");
     }
+
+    _width = width;
+    _height = height;
 
     _tex = new Texture2D(width, height, TextureFormat.RGBA32, mipChain: false);
     _tex.wrapMode = TextureWrapMode.Clamp;
@@ -67,7 +71,7 @@ public class DrawableCanvas : IDisposable {
   /// </summary>
   public int width {
     get {
-      return _tex.width;
+      return _width;
     }
   }
 
@@ -76,7 +80,7 @@ public class DrawableCanvas : IDisposable {
   /// </summary>
   public int height {
     get {
-      return _tex.height;
+      return _height;
     }
   }
 
@@ -265,14 +269,14 @@ public class DrawableCanvas : IDisposable {
           new ScanlineFillJob() {
             colors = getTempJobTextureArray(),
             ids = _ids,
-            width = _tex.width,
-            height = _tex.height
+            width = _width,
+            height = _height
           }.Run();
           _isDirty = false;
         }
       }
 
-      int targetId = _ids[position.y * _tex.width + position.x];
+      int targetId = _ids[position.y * _width + position.x];
       while (targetId != _ids[targetId]) {
         targetId = _ids[targetId];
       }
@@ -283,7 +287,7 @@ public class DrawableCanvas : IDisposable {
         ids = _ids,
         idToFill = targetId,
         fillColor = fillColor
-      }.Schedule(textureData.Length, _tex.width).Complete();
+      }.Schedule(textureData.Length, _width).Complete();
 
       _tex.Apply();
       _isDirty = true;
@@ -358,10 +362,16 @@ public class DrawableCanvas : IDisposable {
 
     //first half
     for (x = 0, y = extent.y, sigma = 2 * b2 + a2 * (1 - 2 * extent.y); b2 * x <= a2 * y; x++) {
-      setSafe(texData, center.x + x, center.y + y, color);
-      setSafe(texData, center.x - x, center.y + y, color);
-      setSafe(texData, center.x + x, center.y - y, color);
-      setSafe(texData, center.x - x, center.y - y, color);
+      int x0 = center.x + x;
+      int x1 = center.x - x;
+      int y0 = center.y + y;
+      int y1 = center.y - y;
+
+      setSafe(texData, x0, y0, color);
+      setSafe(texData, x1, y0, color);
+      setSafe(texData, x0, y1, color);
+      setSafe(texData, x1, y1, color);
+
       if (sigma >= 0) {
         sigma += fa2 * (1 - y);
         y--;
@@ -371,10 +381,16 @@ public class DrawableCanvas : IDisposable {
 
     //second half
     for (x = extent.x, y = 0, sigma = 2 * a2 + b2 * (1 - 2 * extent.x); a2 * y <= b2 * x; y++) {
-      setSafe(texData, center.x + x, center.y + y, color);
-      setSafe(texData, center.x - x, center.y + y, color);
-      setSafe(texData, center.x + x, center.y - y, color);
-      setSafe(texData, center.x - x, center.y - y, color);
+      int x0 = center.x + x;
+      int x1 = center.x - x;
+      int y0 = center.y + y;
+      int y1 = center.y - y;
+
+      setSafe(texData, x0, y0, color);
+      setSafe(texData, x1, y0, color);
+      setSafe(texData, x0, y1, color);
+      setSafe(texData, x1, y1, color);
+
       if (sigma >= 0) {
         sigma += fb2 * (1 - x);
         x--;
@@ -495,11 +511,11 @@ public class DrawableCanvas : IDisposable {
   }
 
   private void setSafe(NativeArray<Color32> texData, int x, int y, Color32 color) {
-    if (x < 0 || x >= _tex.width || y < 0 || y >= _tex.height) {
+    if (x < 0 || x >= _width || y < 0 || y >= _height) {
       return;
     }
 
-    texData[y * _tex.width + x] = color;
+    texData[y * _width + x] = color;
   }
 
   private static bool equals32(Color32 a, Color32 b) {
