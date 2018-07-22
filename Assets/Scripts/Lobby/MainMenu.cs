@@ -1,11 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
 using UnityEngine.Networking.Match;
 
 public class MainMenu : MonoBehaviour {
+  private const string DIRECT_IP_PREF_KEY = "PictionaryDirectIp";
 
   [Header("Direct Connect")]
   public GameObject directConnectAnchor;
@@ -32,6 +32,10 @@ public class MainMenu : MonoBehaviour {
   private MenuState _menuState = MenuState.Main;
   private List<GameObject> _spawnedButtons = new List<GameObject>();
 
+  private void Start() {
+    directIpInput.text = PlayerPrefs.GetString(DIRECT_IP_PREF_KEY, defaultValue: "");
+  }
+
   private void Update() {
     bool directConnectActive = false;
     bool netPlayActive = false;
@@ -44,6 +48,7 @@ public class MainMenu : MonoBehaviour {
       case MenuState.DirectConnect:
         directConnectActive = true;
         manager.networkAddress = directIpInput.text;
+        PlayerPrefs.SetString(DIRECT_IP_PREF_KEY, directIpInput.text);
         break;
       case MenuState.MatchMaker:
         netPlayActive = true;
