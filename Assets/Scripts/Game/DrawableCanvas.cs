@@ -111,6 +111,24 @@ public class DrawableCanvas : IDisposable {
     _scanlineJob = null;
   }
 
+  public void TryUpdateIdTexture(Texture2D tex) {
+    if (_scanlineJob.HasValue) {
+      return;
+    }
+
+    Color32[] pixels = new Color32[_ids.Length];
+    for (int i = 0; i < pixels.Length; i++) {
+      UnityEngine.Random.InitState(_ids[i]);
+      pixels[i].r = (byte)UnityEngine.Random.Range(0, 256);
+      pixels[i].g = (byte)UnityEngine.Random.Range(0, 256);
+      pixels[i].b = (byte)UnityEngine.Random.Range(0, 256);
+      pixels[i].a = 255;
+    }
+
+    tex.SetPixels32(pixels);
+    tex.Apply();
+  }
+
   /// <summary>
   /// Updates the internal state of the canvas.  It is required to call this
   /// method every frame so that the canvas may perform any background tasks
@@ -126,7 +144,9 @@ public class DrawableCanvas : IDisposable {
       if (_isDirty && !_scanlineJob.HasValue) {
         _scanlineJob = new ScanlineFillJob() {
           colors = getTempJobTextureArray(),
-          ids = _ids
+          ids = _ids,
+          width = _width,
+          height = _height
         }.Schedule();
         _isDirty = false;
       }
@@ -245,6 +265,11 @@ public class DrawableCanvas : IDisposable {
       for (int dx = -size; dx <= size; dx++) {
         for (int dy = -size; dy <= size; dy++) {
           Vector2Int offset = new Vector2Int(dx, dy);
+          int l = dx * dx + dy * dy;
+          if (l > size * size) {
+            continue;
+          }
+
           drawEllipse(texData, center + offset, extent, col);
         }
       }

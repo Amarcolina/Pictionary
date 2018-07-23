@@ -36,6 +36,12 @@ public class DrawingBoard : NetworkBehaviour {
     }
   }
 
+  public DrawableCanvas canvas {
+    get {
+      return _boardCanvas;
+    }
+  }
+
   private void Awake() {
     _boardCanvas = new DrawableCanvas(resolutionX, resolutionY);
 
@@ -175,6 +181,8 @@ public class DrawingBoard : NetworkBehaviour {
         getPreviewCanvas(player).Clear(new Color32(0, 0, 0, 0));
       }
     }
+
+    _boardCanvas.Update();
   }
 
   public override bool OnSerialize(NetworkWriter writer, bool initialState) {
