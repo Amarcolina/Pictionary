@@ -43,9 +43,6 @@ public class GameCoordinator : NetworkBehaviour {
   }
 
   [SyncVar, SerializeField]
-  private uint _drawingPlayerId; //networkinstanceid
-
-  [SyncVar, SerializeField]
   private bool _isGamePaused = false;
   public bool isGamePaused {
     get { return _isGamePaused; }
@@ -61,6 +58,7 @@ public class GameCoordinator : NetworkBehaviour {
 
   #region PUBLIC API
 
+  private uint _drawingPlayerId; //networkinstanceid
   private WordTransaction _currentWordTransaction = null;
   private string _currentWordClient = "";
   public string currentWord {
@@ -332,7 +330,7 @@ public class GameCoordinator : NetworkBehaviour {
       player.score = 0;
     }
 
-    _drawingPlayerId = Player.all[Random.Range(0, Player.all.Count)].netId.Value;
+    RpcUpdateDrawingPlayer(Player.all[Random.Range(0, Player.all.Count)].netId.Value);
 
     _turnsLeft = MIN_TURNS_PER_CLASSIC_GAME;
     while ((_turnsLeft % Player.all.Count) != 0) {
@@ -526,7 +524,7 @@ public class GameCoordinator : NetworkBehaviour {
       do {
         currIndex = (currIndex + 1) % Player.all.Count;
       } while (!Player.all[currIndex].isInGame);
-      _drawingPlayerId = Player.all[currIndex].netId.Value;
+      RpcUpdateDrawingPlayer(Player.all[currIndex].netId.Value);
     }
 
     startNextTurn();
@@ -556,6 +554,11 @@ public class GameCoordinator : NetworkBehaviour {
   [TargetRpc]
   private void TargetUpdateCurrentWord(NetworkConnection conn, string word) {
     _currentWordClient = word;
+  }
+
+  [ClientRpc]
+  private void RpcUpdateDrawingPlayer(uint id) {
+    _drawingPlayerId = id;
   }
 
   #endregion

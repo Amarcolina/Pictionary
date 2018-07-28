@@ -87,22 +87,34 @@ public class DrawingBoard : NetworkBehaviour {
 
   [Server]
   public void ApplyBrushAction(BrushAction action) {
-    action.time = Time.realtimeSinceStartup;
-    _toSendQueue.Enqueue(action);
+    action.time = GameCoordinator.instance.gameTime;
     SetDirtyBit(1);
 
-    if (isServer) {
-      _toDrawQueue.Enqueue(action);
-    }
+    //We add the brush action to the send queue so that
+    //when we serialize this board, the actions get serialized
+    //and sent out
+    _toSendQueue.Enqueue(action);
+
+    //Serialized stuff never gets sent to the server (it's the
+    //thing being serialized) so we also want to add the action
+    //to the servers toDraw queue so that it gets drawn
+    _toDrawQueue.Enqueue(action);
   }
 
   [Server]
   public void ClearAndReset() {
-    ApplyBrushAction(new BrushAction() {
+    var clearAction = new BrushAction() {
       type = BrushActionType.Clear,
       drawerId = Player.local.netId
-    });
+    };
 
+    //We apply a brush action to clear all clients
+    //and predict a brush action to clear the server
+    ApplyBrushAction(clearAction);
+    PredictBrushAction(clearAction);
+
+    //We also send preview actions to everybody so that 
+    //things get cleared out
     foreach (var player in Player.all) {
       ApplyBrushAction(new BrushAction() {
         type = BrushActionType.Line,
@@ -183,6 +195,14 @@ public class DrawingBoard : NetworkBehaviour {
     }
 
     _boardCanvas.Update();
+
+    //Sometimes the serialization does not send all actions
+    //this can happen if there are too many actions to serialize
+    //so we check here every frame and set the dirty bit if there
+    //are some left
+    if (_toSendQueue.Count > 0) {
+      SetDirtyBit(1);
+    }
   }
 
   public override bool OnSerialize(NetworkWriter writer, bool initialState) {
