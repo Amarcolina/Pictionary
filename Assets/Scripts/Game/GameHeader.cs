@@ -82,7 +82,7 @@ public class GameHeader : MonoBehaviour {
         wordLabel.text = "";
         break;
       case GameCoordinator.GameState.ClassicGame:
-        if (GameCoordinator.instance.drawingPlayer == Player.local) {
+        if (GameCoordinator.instance.drawingPlayer == Player.local && GameCoordinator.instance.currentWord != "") {
           string[] tokens = GameCoordinator.instance.currentWord.Split();
           wordLabel.text = string.Join(" ", tokens.Select(t => char.ToUpper(t[0]) + t.Substring(1)).ToArray());
         } else {
