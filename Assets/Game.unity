@@ -4691,8 +4691,10 @@ MonoBehaviour:
   _wordBankManager: {fileID: 11400000, guid: 09afadcd99628654298260b9086d0a74, type: 2}
   _messageBoard: {fileID: 1609122158}
   _drawingBoard: {fileID: 178297100}
+  _turnsPerGame: {fileID: 11400000, guid: e994c646f0548b943b24a01b108fed10, type: 2}
+  _timePerTurn: {fileID: 11400000, guid: b395afe0808737c4c8a9ee60d2198eae, type: 2}
+  _endOfGameDelay: {fileID: 11400000, guid: 6109505b77ca6ba498c5753c25c0d9b2, type: 2}
   _gameState: 0
-  _drawingPlayerId: 0
   _isGamePaused: 0
   _turnsLeft: 0
 --- !u!114 &1609122158

@@ -5,8 +5,6 @@ using UnityEngine.Assertions;
 using UnityEngine.Networking;
 
 public class GameCoordinator : NetworkBehaviour {
-  public const int MIN_TURNS_PER_CLASSIC_GAME = 5;
-  public const float TIME_PER_CLASSIC_TURN = 120;
 
   private static GameCoordinator _cachedInstance;
   public static GameCoordinator instance {
@@ -34,6 +32,15 @@ public class GameCoordinator : NetworkBehaviour {
   public DrawingBoard drawingBoard {
     get { return _drawingBoard; }
   }
+
+  [SerializeField]
+  private IntPref _turnsPerGame;
+
+  [SerializeField]
+  private IntPref _timePerTurn;
+
+  [SerializeField]
+  private IntPref _endOfGameDelay;
 
   [Header("Game Data")]
   [SyncVar, SerializeField]
@@ -330,9 +337,10 @@ public class GameCoordinator : NetworkBehaviour {
       player.score = 0;
     }
 
-    RpcUpdateDrawingPlayer(Player.all[Random.Range(0, Player.all.Count)].netId.Value);
+    _drawingPlayerId = Player.all[Random.Range(0, Player.all.Count)].netId.Value;
+    RpcUpdateDrawingPlayer(_drawingPlayerId);
 
-    _turnsLeft = MIN_TURNS_PER_CLASSIC_GAME;
+    _turnsLeft = _turnsPerGame.value;
     while ((_turnsLeft % Player.all.Count) != 0) {
       _turnsLeft++;
     }
@@ -355,7 +363,7 @@ public class GameCoordinator : NetworkBehaviour {
       messageBoard.RpcSubmitMessage(Message.Server(clickingPlayer.gameName + " has rejected the word " + currentWord + "."));
 
       //Then we record the rejection in the current word transaction, and complete the transaction
-      _currentWordTransaction.Reject(1.0f - _serverTimeLeft / TIME_PER_CLASSIC_TURN);
+      _currentWordTransaction.Reject(1.0f - _serverTimeLeft / _timePerTurn.value);
       _currentWordTransaction.CompleteTransaction();
       _currentWordTransaction = null;
       _wordBankManager.SaveActiveWordBank();
@@ -425,7 +433,7 @@ public class GameCoordinator : NetworkBehaviour {
 
     //If the guess is correct
     if (WordUtility.DoesGuessMatch(message.text, currentWord)) {
-      _currentWordTransaction.NotifyGuess(1 - message.timeLeft / TIME_PER_CLASSIC_TURN);
+      _currentWordTransaction.NotifyGuess(1 - message.timeLeft / _timePerTurn.value);
 
       //Send the message only to the player who guessed
       messageBoard.TargetSubmitMessage(player.connectionToClient, message);
@@ -445,7 +453,7 @@ public class GameCoordinator : NetworkBehaviour {
       //If this is the first person to guess
       //Set the time to be 15 seconds remaining!
       if (Player.all.Count(p => p.hasGuessed) == 1) {
-        _serverTimeLeft = 15;
+        _serverTimeLeft = _endOfGameDelay.value;
         RpcUpdateTimeLeft(_serverTimeLeft, forceUpdate: true);
         return;
       }
@@ -473,6 +481,7 @@ public class GameCoordinator : NetworkBehaviour {
     Debug.Log("Finishing turn...");
 
     Assert.IsNotNull(_currentWordTransaction, "We should always be undergoing a word transaction before finishing a turn.");
+    messageBoard.RpcSubmitMessage(Message.Server("The word was " + currentWord));
 
     _currentWordTransaction.CompleteTransaction();
     _currentWordTransaction = null;
@@ -492,8 +501,6 @@ public class GameCoordinator : NetworkBehaviour {
         points = Mathf.Max(1, points - 1);
       }
     }
-
-    messageBoard.RpcSubmitMessage(Message.Server("The word was " + currentWord));
 
     //Start the lobby if there are not enough players to play a game
     if (Player.all.Count(p => p.isInGame) <= 1) {
@@ -524,7 +531,9 @@ public class GameCoordinator : NetworkBehaviour {
       do {
         currIndex = (currIndex + 1) % Player.all.Count;
       } while (!Player.all[currIndex].isInGame);
-      RpcUpdateDrawingPlayer(Player.all[currIndex].netId.Value);
+
+      _drawingPlayerId = Player.all[currIndex].netId.Value;
+      RpcUpdateDrawingPlayer(_drawingPlayerId);
     }
 
     startNextTurn();
@@ -547,7 +556,7 @@ public class GameCoordinator : NetworkBehaviour {
 
     drawingBoard.ClearAndReset();
 
-    _serverTimeLeft = TIME_PER_CLASSIC_TURN;
+    _serverTimeLeft = _timePerTurn.value;
     RpcUpdateTimeLeft(_serverTimeLeft, forceUpdate: true);
   }
 

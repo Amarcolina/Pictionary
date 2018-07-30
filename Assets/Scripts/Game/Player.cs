@@ -13,16 +13,7 @@ public class Player : NetworkBehaviour {
 
   public static Action OnPlayerChange;
 
-  public static string playerName {
-    get {
-      return PlayerPrefs.GetString(NAME_PREF_KEY, "Unnamed");
-    }
-    set {
-      value = value.Trim();
-      value = value.Substring(0, Mathf.Min(64, value.Length));
-      PlayerPrefs.SetString(NAME_PREF_KEY, value);
-    }
-  }
+  public StringPref namePref;
 
   [SyncVar]
   public string gameName = "Unnamed";
@@ -58,7 +49,7 @@ public class Player : NetworkBehaviour {
       local = this;
     }
 
-    CmdChangeName(playerName);
+    CmdChangeName(namePref.value);
   }
 
   [ClientCallback]
@@ -120,7 +111,9 @@ public class Player : NetworkBehaviour {
 
   [ClientRpc]
   public void RpcUpdateNamePreference(string name) {
-    playerName = name;
+    name = name.Trim();
+    name = name.Substring(0, Mathf.Min(64, name.Length));
+    namePref.value = name;
   }
 
 }

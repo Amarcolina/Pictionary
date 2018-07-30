@@ -176,6 +176,18 @@ public class Paintbrush : MonoBehaviour {
         isPreview = true
       });
     }
+
+    if (!GameCoordinator.instance.CanPlayerDraw(Player.local)) {
+      GameCoordinator.instance.drawingBoard.PredictBrushAction(new BrushAction() {
+        drawerId = Player.local.netId,
+        type = BrushActionType.Box,
+        position0 = new Vector2Int(-100, -100),
+        position1 = new Vector2Int(-100, -100),
+        size = 0,
+        color = Color.black,
+        isPreview = true
+      });
+    }
   }
 
   IEnumerator freeformCoroutine() {
