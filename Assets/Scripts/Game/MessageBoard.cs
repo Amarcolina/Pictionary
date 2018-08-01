@@ -64,7 +64,7 @@ public class MessageBoard : NetworkBehaviour {
       return;
     }
     if (Input.GetKey(KeyCode.Return) || Input.GetKey(KeyCode.KeypadEnter) || Input.GetKey(KeyCode.F3)) {
-      Player.local.CmdAddMessage(Message.User(text));
+      Player.local.ExecuteClientMessage(Message.User(text));
       inputField.text = "";
     }
   }

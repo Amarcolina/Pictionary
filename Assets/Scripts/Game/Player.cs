@@ -108,10 +108,6 @@ public class Player : NetworkBehaviour {
     GameCoordinator.instance.SubmitResumeGame();
   }
 
-  [Command]
-  public void CmdAddMessage(Message msg) {
-    GameCoordinator.instance.SubmitMessage(this, msg);
-  }
 
   [Command]
   public void CmdDraw(BrushAction brush) {
@@ -123,6 +119,34 @@ public class Player : NetworkBehaviour {
     name = name.Trim();
     name = name.Substring(0, Mathf.Min(64, name.Length));
     namePref.value = name;
+  }
+
+  [Client]
+  public void ExecuteClientMessage(Message message) {
+    if (tryParseLocalMessage(message)) {
+      return;
+    }
+
+    //Else if we couldn't process the message, send it to the server
+    CmdAddMessage(message);
+  }
+
+
+  [Command]
+  private void CmdAddMessage(Message msg) {
+    GameCoordinator.instance.SubmitMessage(this, msg);
+  }
+
+  private bool tryParseLocalMessage(Message message) {
+    string[] tokens = message.text.Split().Where(t => t.Length > 0).ToArray();
+    tokens[0] = tokens[0].ToLower();
+
+    if (tokens[0] == "/quit") {
+      NetworkManager.singleton.StopHost();
+      return true;
+    }
+
+    return false;
   }
 
 }

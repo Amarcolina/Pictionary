@@ -265,11 +265,6 @@ public class GameCoordinator : NetworkBehaviour {
       return true;
     }
 
-    if (tokens[0] == "/quit") {
-      NetworkManager.singleton.StopHost();
-      return true;
-    }
-
     return false;
   }
 
