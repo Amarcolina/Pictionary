@@ -380,7 +380,7 @@ MonoBehaviour:
   matchPrefab: {fileID: 1178159228}
   netMatchName: {fileID: 1759255159}
   optionsAnchor: {fileID: 985723219}
-  connectingAnchor: {fileID: 0}
+  namePref: {fileID: 11400000, guid: 0a7cf90c5ba79fe4899de4cd913a122b, type: 2}
 --- !u!4 &21017421
 Transform:
   m_ObjectHideFlags: 0
@@ -2688,7 +2688,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &985723220
 RectTransform:
   m_ObjectHideFlags: 0

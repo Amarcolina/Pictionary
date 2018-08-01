@@ -18,10 +18,7 @@ public class MainMenu : MonoBehaviour {
 
   [Header("Options")]
   public GameObject optionsAnchor;
-
-  [Header("General")]
   public StringPref namePref;
-  public GameObject connectingAnchor;
 
   private NetworkManager manager {
     get {

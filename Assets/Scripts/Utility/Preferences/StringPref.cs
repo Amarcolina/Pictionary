@@ -16,7 +16,7 @@ public class StringPref : ScriptableObject {
       return PlayerPrefs.GetString(key, defaultValue);
     }
     set {
-      PlayerPrefs.GetString(key, value);
+      PlayerPrefs.SetString(key, value);
     }
   }
 }

@@ -39,11 +39,14 @@ public class Player : NetworkBehaviour {
     all.Add(this);
 
     if (OnPlayerChange != null) {
-      OnPlayerChange();
+      try {
+        OnPlayerChange();
+      } catch (Exception e) {
+        Debug.LogException(e);
+      }
     }
   }
 
-  [ClientCallback]
   private void Start() {
     if (isLocalPlayer) {
       local = this;
@@ -52,16 +55,22 @@ public class Player : NetworkBehaviour {
     CmdChangeName(namePref.value);
   }
 
-  [ClientCallback]
   private void OnDestroy() {
     all.Remove(this);
 
+    if (local == this) {
+      local = null;
+    }
+
     if (OnPlayerChange != null) {
-      OnPlayerChange();
+      try {
+        OnPlayerChange();
+      } catch (Exception e) {
+        Debug.LogException(e);
+      }
     }
   }
 
-  [ClientCallback]
   private void Update() {
     if (isLocalPlayer) {
       float timeLeft = GameCoordinator.instance.timeLeft;

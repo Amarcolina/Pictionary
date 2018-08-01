@@ -9,12 +9,11 @@ public class PlayerList : NetworkBehaviour {
 
   private List<PlayerLabel> _spawned = new List<PlayerLabel>();
 
-  [ClientCallback]
   private void OnEnable() {
     Player.OnPlayerChange += updatePlayerList;
+    updatePlayerList();
   }
 
-  [ClientCallback]
   private void OnDisable() {
     Player.OnPlayerChange -= updatePlayerList;
   }

@@ -166,11 +166,15 @@ public class GameCoordinator : NetworkBehaviour {
     };
   }
 
-  private void Start() {
-    if (isClient) {
-      Paintbrush.OnDraw += OnDraw;
-    }
+  private void OnEnable() {
+    Paintbrush.OnDraw += OnDraw;
+  }
 
+  private void OnDisable() {
+    Paintbrush.OnDraw -= OnDraw;
+  }
+
+  private void Start() {
     if (isServer) {
       StartCoroutine(updateTimeCoroutine());
       StartLobby();
@@ -258,6 +262,11 @@ public class GameCoordinator : NetworkBehaviour {
         "<b>/quit</b>\n" +
         "Quits to the lobby"
       });
+      return true;
+    }
+
+    if (tokens[0] == "/quit") {
+      NetworkManager.singleton.StopHost();
       return true;
     }
 
@@ -439,7 +448,7 @@ public class GameCoordinator : NetworkBehaviour {
       messageBoard.TargetSubmitMessage(player.connectionToClient, message);
 
       //Don't submit the actual message to the rest, just tell everyone that they have guessed correctly
-      messageBoard.RpcSubmitMessage(Message.Server("Player " + player.gameName + " has guessed!"));
+      messageBoard.RpcSubmitMessage(Message.Server(player.gameName + " has guessed!"));
 
       player.guessTime = message.boardDisplayTime;
       player.hasGuessed = true;
@@ -461,7 +470,7 @@ public class GameCoordinator : NetworkBehaviour {
       return;
     }
 
-    //If the guess is close it is not broadcast to the rest of the player
+    //If the guess is close it is not broadcast to the rest of the players
     if (WordUtility.IsGuessClose(message.text, currentWord)) {
       messageBoard.TargetSubmitMessage(player.connectionToClient, message);
       messageBoard.TargetSubmitMessage(player.connectionToClient, Message.Server("Your guess is close"));

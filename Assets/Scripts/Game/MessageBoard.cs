@@ -43,7 +43,6 @@ public class MessageBoard : NetworkBehaviour {
   public ScrollRect scrollRect;
   public List<string> messageList;
 
-  [ClientCallback]
   private void Update() {
     string text = "";
     foreach (var item in messageList) {

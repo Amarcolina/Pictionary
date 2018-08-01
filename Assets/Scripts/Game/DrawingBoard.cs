@@ -133,7 +133,6 @@ public class DrawingBoard : NetworkBehaviour {
     drawBrushActionToCanvases(action);
   }
 
-  [ClientCallback]
   private void Update() {
     while (_toDrawQueue.Count > 0) {
       var action = _toDrawQueue.Peek();
