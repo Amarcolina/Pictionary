@@ -114,6 +114,7 @@ public class Paintbrush : MonoBehaviour {
   public RectTransform board;
   public int maxBrushSize = 5;
   public float scrollSensitivity = 1;
+  public int eraseSize = 10;
 
   [Header("Paintbrush State")]
   public Tool tool = Tool.Freehand;
@@ -140,18 +141,6 @@ public class Paintbrush : MonoBehaviour {
     }
   }
 
-  private bool currHeld {
-    get {
-      return Input.GetKey(KeyCode.Mouse0);
-    }
-  }
-
-  private bool currPressed {
-    get {
-      return Input.GetKeyDown(KeyCode.Mouse0);
-    }
-  }
-
   private bool isInsideCanvas(Vector2Int cursor) {
     return cursor.x >= 0 && cursor.x < board.sizeDelta.x &&
            cursor.y >= 0 && cursor.y < board.sizeDelta.y;
@@ -159,7 +148,7 @@ public class Paintbrush : MonoBehaviour {
 
   #region UPDATE LOGIC
   private void Start() {
-    SetTool((int)tool);
+    StartCoroutine(controlCoroutine());
   }
 
   private void Update() {
@@ -167,14 +156,16 @@ public class Paintbrush : MonoBehaviour {
       size = Mathf.Clamp(size - Input.mouseScrollDelta.y * scrollSensitivity, 0, maxBrushSize);
     }
 
-    if (OnDraw != null && !currHeld && GameCoordinator.instance.CanPlayerDraw(Player.local)) {
-      OnDraw(new BrushAction() {
-        type = BrushActionType.PreviewBox,
-        position0 = currCursor,
-        size = intSize,
-        color = color,
-        isPreview = true
-      });
+    if (OnDraw != null && GameCoordinator.instance.CanPlayerDraw(Player.local)) {
+      if (!Input.GetKey(KeyCode.Mouse0)) {
+        OnDraw(new BrushAction() {
+          type = BrushActionType.PreviewBox,
+          position0 = currCursor,
+          size = intSize,
+          color = color,
+          isPreview = true
+        });
+      }
     }
 
     if (!GameCoordinator.instance.CanPlayerDraw(Player.local)) {
@@ -190,101 +181,123 @@ public class Paintbrush : MonoBehaviour {
     }
   }
 
-  IEnumerator freeformCoroutine() {
-    Vector2Int prevCursor = Vector2Int.zero;
-    bool prevHeld = false;
-
+  IEnumerator controlCoroutine() {
     while (true) {
-      if (currHeld && prevHeld &&
-          (isInsideCanvas(prevCursor) || isInsideCanvas(currCursor))) {
+      yield return null;
 
-        if (OnDraw != null) {
-          OnDraw(new BrushAction() {
-            type = BrushActionType.Line,
-            position0 = prevCursor,
-            position1 = currCursor,
-            color = color,
-            size = intSize
-          });
-        }
+      if (!isInsideCanvas(currCursor)) {
+        continue;
       }
 
-      prevHeld = currHeld;
+      if (Input.GetKeyDown(KeyCode.Mouse0)) {
+        switch (tool) {
+          case Tool.Freehand:
+            yield return StartCoroutine(freeformCoroutine());
+            break;
+          case Tool.Line:
+          case Tool.Box:
+          case Tool.Oval:
+            yield return StartCoroutine(shapeCoroutine());
+            break;
+          case Tool.FloodFill:
+            if (OnDraw != null) {
+              OnDraw(new BrushAction() {
+                type = BrushActionType.FloodFill,
+                position0 = currCursor,
+                color = color
+              });
+            }
+
+            break;
+          default:
+            Debug.LogError("Should be no other tools, but had a tool of " + tool);
+            break;
+        }
+      } else if (Input.GetKeyDown(KeyCode.Mouse1)) {
+        Debug.Log("Asd?");
+        yield return StartCoroutine(eraseCoroutine());
+      }
+    }
+  }
+
+  IEnumerator eraseCoroutine() {
+    Vector2Int prevCursor = currCursor;
+
+    while (Input.GetKey(KeyCode.Mouse1)) {
+      if (OnDraw != null) {
+        OnDraw(new BrushAction() {
+          type = BrushActionType.Line,
+          position0 = prevCursor,
+          position1 = currCursor,
+          color = new Color(1, 1, 1, 1),
+          size = eraseSize
+        });
+
+        OnDraw(new BrushAction() {
+          type = BrushActionType.Box,
+          position0 = currCursor - new Vector2Int(eraseSize, eraseSize),
+          position1 = currCursor + new Vector2Int(eraseSize, eraseSize),
+          color = new Color(0, 0, 0, 1),
+          size = 0,
+          isPreview = true
+        });
+      }
+
+      prevCursor = currCursor;
+      yield return null;
+    }
+  }
+
+  IEnumerator freeformCoroutine() {
+    Vector2Int prevCursor = currCursor;
+
+    while (Input.GetKey(KeyCode.Mouse0)) {
+      if (OnDraw != null) {
+        OnDraw(new BrushAction() {
+          type = BrushActionType.Line,
+          position0 = prevCursor,
+          position1 = currCursor,
+          color = color,
+          size = intSize
+        });
+      }
+
       prevCursor = currCursor;
       yield return null;
     }
   }
 
   IEnumerator shapeCoroutine() {
-    while (true) {
-      //Wait until a click happens inside canvas
-      yield return new WaitUntil(() => Input.GetKeyDown(KeyCode.Mouse0) && isInsideCanvas(currCursor));
-      Vector2Int startCursor = currCursor;
+    Vector2Int startCursor = currCursor;
 
-      //Draw a preview of the action while the cursor is held
-      while (currHeld) {
-        if (OnDraw != null) {
-          OnDraw(new BrushAction() {
-            type = (BrushActionType)tool,
-            position0 = startCursor,
-            position1 = currCursor,
-            color = color,
-            size = intSize,
-            isPreview = true
-          });
-        }
-
-        yield return null;
-      }
-
+    while (Input.GetKey(KeyCode.Mouse0)) {
       if (OnDraw != null) {
         OnDraw(new BrushAction() {
           type = (BrushActionType)tool,
           position0 = startCursor,
           position1 = currCursor,
           color = color,
-          size = intSize
+          size = intSize,
+          isPreview = true
         });
       }
+
+      yield return null;
     }
-  }
 
-  IEnumerator floodFillCoroutine() {
-    while (true) {
-      yield return new WaitUntil(() => currPressed && isInsideCanvas(currCursor));
-
-      if (OnDraw != null) {
-        OnDraw(new BrushAction() {
-          type = BrushActionType.FloodFill,
-          position0 = currCursor,
-          color = color
-        });
-      }
-
-      yield return new WaitWhile(() => currPressed);
+    if (OnDraw != null) {
+      OnDraw(new BrushAction() {
+        type = (BrushActionType)tool,
+        position0 = startCursor,
+        position1 = currCursor,
+        color = color,
+        size = intSize
+      });
     }
   }
 
   public void SetTool(int newTool) {
     tool = (Tool)newTool;
-    StopAllCoroutines();
-
-    switch (tool) {
-      case Tool.Freehand:
-        StartCoroutine(freeformCoroutine());
-        break;
-      case Tool.Line:
-      case Tool.Box:
-      case Tool.Oval:
-        StartCoroutine(shapeCoroutine());
-        break;
-      case Tool.FloodFill:
-        StartCoroutine(floodFillCoroutine());
-        break;
-      default:
-        Debug.LogError("Tried to switch to unexpected tool " + tool);
-        break;
-    }
   }
 
   public void Clear() {
