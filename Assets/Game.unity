@@ -479,6 +479,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   brush: {fileID: 1609122161}
+  canAdjustColor: 1
 --- !u!1 &83700494
 GameObject:
   m_ObjectHideFlags: 0
@@ -892,6 +893,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   brush: {fileID: 1609122161}
+  canAdjustColor: 0
 --- !u!1 &165492006
 GameObject:
   m_ObjectHideFlags: 0
@@ -1017,6 +1019,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   brush: {fileID: 1609122161}
+  canAdjustColor: 1
 --- !u!1 &178104736
 GameObject:
   m_ObjectHideFlags: 0
@@ -1566,6 +1569,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   brush: {fileID: 1609122161}
+  canAdjustColor: 1
 --- !u!1 &347581645
 GameObject:
   m_ObjectHideFlags: 0
@@ -2281,6 +2285,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   brush: {fileID: 1609122161}
+  canAdjustColor: 1
 --- !u!1 &680642630
 GameObject:
   m_ObjectHideFlags: 0
@@ -2586,6 +2591,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   brush: {fileID: 1609122161}
+  canAdjustColor: 1
 --- !u!1 &780142873
 GameObject:
   m_ObjectHideFlags: 0
@@ -3158,6 +3164,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   brush: {fileID: 1609122161}
+  canAdjustColor: 1
 --- !u!1 &981722328
 GameObject:
   m_ObjectHideFlags: 0
@@ -3865,6 +3872,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   brush: {fileID: 1609122161}
+  canAdjustColor: 1
 --- !u!1 &1276882087
 GameObject:
   m_ObjectHideFlags: 0
@@ -4771,6 +4779,7 @@ MonoBehaviour:
   board: {fileID: 1982193400}
   maxBrushSize: 7
   scrollSensitivity: 1
+  eraseSize: 10
   tool: 0
   size: 1
   color: {r: 0, g: 0, b: 0, a: 1}
@@ -4934,6 +4943,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   brush: {fileID: 1609122161}
+  canAdjustColor: 1
 --- !u!1 &1660011776
 GameObject:
   m_ObjectHideFlags: 0
@@ -5246,6 +5256,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   brush: {fileID: 1609122161}
+  canAdjustColor: 0
 --- !u!1 &1756050590
 GameObject:
   m_ObjectHideFlags: 0
@@ -5371,6 +5382,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   brush: {fileID: 1609122161}
+  canAdjustColor: 1
 --- !u!1 &1822304521
 GameObject:
   m_ObjectHideFlags: 0
@@ -5496,6 +5508,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   brush: {fileID: 1609122161}
+  canAdjustColor: 1
 --- !u!1 &1844128232
 GameObject:
   m_ObjectHideFlags: 0
