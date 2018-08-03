@@ -84,9 +84,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ecea6d3860a79f54983ba24c680e1f22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  namePref: {fileID: 11400000, guid: 0a7cf90c5ba79fe4899de4cd913a122b, type: 2}
-  gameName: Unnamed
-  isInGame: 0
-  hasGuessed: 0
-  score: 0
-  timerHasReachedZero: 0
+  _namePref: {fileID: 11400000, guid: 0a7cf90c5ba79fe4899de4cd913a122b, type: 2}
+  _gameName: Unnamed
+  _isInGame: 0
+  _hasGuessed: 0
+  _score: 0
+  _timerHasReachedZero: 0
