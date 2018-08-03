@@ -1,10 +1,13 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 
 [RequireComponent(typeof(InputField))]
 public class IntPrefInput : MonoBehaviour {
 
-  public IntPref preference;
+  [SerializeField]
+  [FormerlySerializedAs("preference")]
+  private IntPref _preference;
 
   private InputField _field;
 
@@ -13,7 +16,7 @@ public class IntPrefInput : MonoBehaviour {
   }
 
   private void OnEnable() {
-    _field.text = preference.value.ToString();
+    _field.text = _preference.value.ToString();
     _field.characterValidation = InputField.CharacterValidation.Integer;
     _field.onEndEdit.AddListener(onTextChange);
   }
@@ -25,10 +28,10 @@ public class IntPrefInput : MonoBehaviour {
   private void onTextChange(string text) {
     int value;
     if (!int.TryParse(text, out value)) {
-      _field.text = preference.value.ToString();
+      _field.text = _preference.value.ToString();
       return;
     }
 
-    preference.value = value;
+    _preference.value = value;
   }
 }

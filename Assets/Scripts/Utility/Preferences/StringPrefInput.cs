@@ -1,10 +1,13 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 
 [RequireComponent(typeof(InputField))]
 public class StringPrefInput : MonoBehaviour {
 
-  public StringPref preference;
+  [SerializeField]
+  [FormerlySerializedAs("preference")]
+  private StringPref _preference;
 
   private InputField _field;
 
@@ -13,7 +16,7 @@ public class StringPrefInput : MonoBehaviour {
   }
 
   private void OnEnable() {
-    _field.text = preference.value.ToString();
+    _field.text = _preference.value.ToString();
     _field.onEndEdit.AddListener(onTextChange);
   }
 
@@ -22,6 +25,6 @@ public class StringPrefInput : MonoBehaviour {
   }
 
   private void onTextChange(string text) {
-    preference.value = text;
+    _preference.value = text;
   }
 }
