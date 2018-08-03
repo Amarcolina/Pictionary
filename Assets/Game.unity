@@ -478,8 +478,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0052b882f9295ed478f3e1ba01e4488d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brush: {fileID: 1609122161}
-  canAdjustColor: 1
+  _brush: {fileID: 1609122161}
+  _canAdjustColor: 1
 --- !u!1 &83700494
 GameObject:
   m_ObjectHideFlags: 0
@@ -892,8 +892,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0052b882f9295ed478f3e1ba01e4488d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brush: {fileID: 1609122161}
-  canAdjustColor: 0
+  _brush: {fileID: 1609122161}
+  _canAdjustColor: 0
 --- !u!1 &165492006
 GameObject:
   m_ObjectHideFlags: 0
@@ -1018,8 +1018,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0052b882f9295ed478f3e1ba01e4488d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brush: {fileID: 1609122161}
-  canAdjustColor: 1
+  _brush: {fileID: 1609122161}
+  _canAdjustColor: 1
 --- !u!1 &178104736
 GameObject:
   m_ObjectHideFlags: 0
@@ -1135,11 +1135,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a97bb66f9405cd4a97b09f6b45312e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  resolutionX: 600
-  resolutionY: 480
-  maxActionsPerFrame: 20
-  boardImage: {fileID: 1982193401}
-  previewImagePrefab: {fileID: 1490412550}
+  _resolutionX: 600
+  _resolutionY: 480
+  _maxActionsPerFrame: 20
+  _boardImage: {fileID: 1982193401}
+  _previewImagePrefab: {fileID: 1490412550}
 --- !u!114 &178297101
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1568,8 +1568,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0052b882f9295ed478f3e1ba01e4488d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brush: {fileID: 1609122161}
-  canAdjustColor: 1
+  _brush: {fileID: 1609122161}
+  _canAdjustColor: 1
 --- !u!1 &347581645
 GameObject:
   m_ObjectHideFlags: 0
@@ -2284,8 +2284,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0052b882f9295ed478f3e1ba01e4488d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brush: {fileID: 1609122161}
-  canAdjustColor: 1
+  _brush: {fileID: 1609122161}
+  _canAdjustColor: 1
 --- !u!1 &680642630
 GameObject:
   m_ObjectHideFlags: 0
@@ -2590,8 +2590,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0052b882f9295ed478f3e1ba01e4488d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brush: {fileID: 1609122161}
-  canAdjustColor: 1
+  _brush: {fileID: 1609122161}
+  _canAdjustColor: 1
 --- !u!1 &780142873
 GameObject:
   m_ObjectHideFlags: 0
@@ -3163,8 +3163,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0052b882f9295ed478f3e1ba01e4488d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brush: {fileID: 1609122161}
-  canAdjustColor: 1
+  _brush: {fileID: 1609122161}
+  _canAdjustColor: 1
 --- !u!1 &981722328
 GameObject:
   m_ObjectHideFlags: 0
@@ -3871,8 +3871,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0052b882f9295ed478f3e1ba01e4488d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brush: {fileID: 1609122161}
-  canAdjustColor: 1
+  _brush: {fileID: 1609122161}
+  _canAdjustColor: 1
 --- !u!1 &1276882087
 GameObject:
   m_ObjectHideFlags: 0
@@ -4702,7 +4702,7 @@ MonoBehaviour:
   _turnsPerGame: {fileID: 11400000, guid: e994c646f0548b943b24a01b108fed10, type: 2}
   _timePerTurn: {fileID: 11400000, guid: b395afe0808737c4c8a9ee60d2198eae, type: 2}
   _endOfGameDelay: {fileID: 11400000, guid: 6109505b77ca6ba498c5753c25c0d9b2, type: 2}
-  _gameState: 0
+  _currentState: 0
   _isGamePaused: 0
   _turnsLeft: 0
 --- !u!114 &1609122158
@@ -4716,10 +4716,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30873d1ee4d07c14eace6ff2b0385066, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  textBox: {fileID: 859143072}
-  inputField: {fileID: 1660011778}
-  scrollRect: {fileID: 1325099474}
-  messageList: []
+  _textBox: {fileID: 859143072}
+  _inputField: {fileID: 1660011778}
+  _scrollRect: {fileID: 1325099474}
+  _messageList: []
 --- !u!114 &1609122159
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4776,13 +4776,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c19b0716e52da794dac5d5818ae1dbd7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  board: {fileID: 1982193400}
-  maxBrushSize: 7
-  scrollSensitivity: 1
-  eraseSize: 10
-  tool: 0
-  size: 1
-  color: {r: 0, g: 0, b: 0, a: 1}
+  _board: {fileID: 1982193400}
+  _maxBrushSize: 7
+  _scrollSensitivity: 1
+  _eraseSize: 10
+  _tool: 0
+  _size: 1
+  _color: {r: 0, g: 0, b: 0, a: 1}
 --- !u!114 &1609122162
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4794,8 +4794,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 718c793f73f0bed418a790b766c343e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  labelPrefab: {fileID: 1844128234}
-  labelAnchor: {fileID: 780142874}
+  _labelPrefab: {fileID: 1844128234}
+  _labelAnchor: {fileID: 780142874}
 --- !u!114 &1609122163
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4807,17 +4807,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 438a58993c602bb4dae2667b7e18b4fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  group: {fileID: 714641309}
-  timeLeftLabel: {fileID: 1116263521}
-  turnsLeftLabel: {fileID: 347581647}
-  pauseImage: {fileID: 2085496138}
-  pauseSprite: {fileID: 21300000, guid: 8a83fc11328284340a31256646a4cb11, type: 3}
-  resumeSprite: {fileID: 21300000, guid: a6f9c0680d9682049a71ab1b38ebf5ae, type: 3}
-  backgroundImage: {fileID: 649162657}
-  drawColor: {r: 1, g: 1, b: 0, a: 1}
-  someoneGuessedColor: {r: 1, g: 0, b: 0, a: 1}
-  youGuessedColor: {r: 0, g: 1, b: 0, a: 1}
-  wordLabel: {fileID: 981722330}
+  _group: {fileID: 714641309}
+  _timeLeftLabel: {fileID: 1116263521}
+  _turnsLeftLabel: {fileID: 347581647}
+  _pauseImage: {fileID: 2085496138}
+  _pauseSprite: {fileID: 21300000, guid: 8a83fc11328284340a31256646a4cb11, type: 3}
+  _resumeSprite: {fileID: 21300000, guid: a6f9c0680d9682049a71ab1b38ebf5ae, type: 3}
+  _backgroundImage: {fileID: 649162657}
+  _drawColor: {r: 1, g: 1, b: 0, a: 1}
+  _someoneGuessedColor: {r: 1, g: 0, b: 0, a: 1}
+  _youGuessedColor: {r: 0, g: 1, b: 0, a: 1}
+  _wordLabel: {fileID: 981722330}
 --- !u!1 &1627163045
 GameObject:
   m_ObjectHideFlags: 0
@@ -4942,8 +4942,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0052b882f9295ed478f3e1ba01e4488d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brush: {fileID: 1609122161}
-  canAdjustColor: 1
+  _brush: {fileID: 1609122161}
+  _canAdjustColor: 1
 --- !u!1 &1660011776
 GameObject:
   m_ObjectHideFlags: 0
@@ -5116,8 +5116,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 331fbc3d94813404684d25db155f964b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  board: {fileID: 178297100}
-  idImage: {fileID: 643610548}
+  _board: {fileID: 178297100}
+  _idImage: {fileID: 643610548}
 --- !u!4 &1702518162
 Transform:
   m_ObjectHideFlags: 0
@@ -5255,8 +5255,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0052b882f9295ed478f3e1ba01e4488d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brush: {fileID: 1609122161}
-  canAdjustColor: 0
+  _brush: {fileID: 1609122161}
+  _canAdjustColor: 0
 --- !u!1 &1756050590
 GameObject:
   m_ObjectHideFlags: 0
@@ -5381,8 +5381,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0052b882f9295ed478f3e1ba01e4488d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brush: {fileID: 1609122161}
-  canAdjustColor: 1
+  _brush: {fileID: 1609122161}
+  _canAdjustColor: 1
 --- !u!1 &1822304521
 GameObject:
   m_ObjectHideFlags: 0
@@ -5507,8 +5507,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0052b882f9295ed478f3e1ba01e4488d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brush: {fileID: 1609122161}
-  canAdjustColor: 1
+  _brush: {fileID: 1609122161}
+  _canAdjustColor: 1
 --- !u!1 &1844128232
 GameObject:
   m_ObjectHideFlags: 0
