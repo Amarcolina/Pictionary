@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+using static RichTextUtility;
 
 public class Player : NetworkBehaviour {
   public const string NAME_PREF_KEY = "PlayerNamePreference";
@@ -143,6 +144,15 @@ public class Player : NetworkBehaviour {
 
     if (tokens[0] == "/quit") {
       NetworkManager.singleton.StopHost();
+      return true;
+    }
+
+    if (tokens[0] == "/info") {
+      CmdAddMessage(Message.User("\n" +
+                                 B("Persistent Data Path:\n") +
+                                 Application.persistentDataPath + "\n" +
+                                 B("Word Bank Path:\n") +
+                                 WordBankManager.BankPath));
       return true;
     }
 

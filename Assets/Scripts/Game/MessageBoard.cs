@@ -71,16 +71,16 @@ public class MessageBoard : NetworkBehaviour {
 
   [ClientRpc]
   public void RpcSubmitMessage(Message msg) {
-    submitMessage(msg);
+    LocalSubmitMessage(msg);
   }
 
   [TargetRpc]
   public void TargetSubmitMessage(NetworkConnection conn, Message msg) {
-    submitMessage(msg);
+    LocalSubmitMessage(msg);
   }
 
   [Client]
-  private void submitMessage(Message msg) {
+  public void LocalSubmitMessage(Message msg) {
     string text = msg.text;
 
     if (msg.netId != NetworkInstanceId.Invalid) {

@@ -12,9 +12,13 @@ public class WordBankManager : ScriptableObject {
   [NonSerialized]
   private WordBank _activeWordBank;
 
-  private string bankPath {
+  public static string BankPath {
     get {
+#if UNITY_EDITOR
+      return Path.Combine(Application.dataPath, Path.Combine("..", BANK_FILENAME));
+#else
       return Path.Combine(Application.persistentDataPath, BANK_FILENAME);
+#endif
     }
   }
 
@@ -23,9 +27,9 @@ public class WordBankManager : ScriptableObject {
       if (_activeWordBank == null) {
         var defaultWords = defaultWordList.text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
-        if (File.Exists(bankPath)) {
+        if (File.Exists(BankPath)) {
           try {
-            _activeWordBank = JsonUtility.FromJson<WordBank>(File.ReadAllText(bankPath));
+            _activeWordBank = JsonUtility.FromJson<WordBank>(File.ReadAllText(BankPath));
             _activeWordBank.MatchToWordList(defaultWords);
           } catch (Exception e) {
             Debug.LogWarning("Could not load word bank for unknown reason.");
@@ -44,7 +48,7 @@ public class WordBankManager : ScriptableObject {
 
   public void SaveActiveWordBank() {
     if (_activeWordBank != null) {
-      File.WriteAllText(bankPath, JsonUtility.ToJson(_activeWordBank, prettyPrint: true));
+      File.WriteAllText(BankPath, JsonUtility.ToJson(_activeWordBank, prettyPrint: true));
     }
   }
 }
