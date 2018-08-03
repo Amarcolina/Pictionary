@@ -1,116 +1,146 @@
 ﻿using System.Linq;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 
 public class GameHeader : MonoBehaviour {
 
-  public CanvasGroup group;
-  public Text timeLeftLabel;
-  public Text turnsLeftLabel;
+  [SerializeField]
+  [FormerlySerializedAs("group")]
+  private CanvasGroup _group;
+
+  [SerializeField]
+  [FormerlySerializedAs("timeLeftLabel")]
+  private Text _timeLeftLabel;
+
+  [SerializeField]
+  [FormerlySerializedAs("turnsLeftLabel")]
+  private Text _turnsLeftLabel;
 
   [Header("Pause Resume")]
-  public Image pauseImage;
-  public Sprite pauseSprite;
-  public Sprite resumeSprite;
+  [SerializeField]
+  [FormerlySerializedAs("pauseImage")]
+  private Image _pauseImage;
+
+  [SerializeField]
+  [FormerlySerializedAs("pauseSprite")]
+  private Sprite _pauseSprite;
+
+  [SerializeField]
+  [FormerlySerializedAs("resumeSprite")]
+  private Sprite _resumeSprite;
 
   [Header("Word Header")]
-  public Image backgroundImage;
-  public Color drawColor;
-  public Color someoneGuessedColor;
-  public Color youGuessedColor;
-  public Text wordLabel;
+  [SerializeField]
+  [FormerlySerializedAs("backgroundImage")]
+  private Image _backgroundImage;
+
+  [SerializeField]
+  [FormerlySerializedAs("drawColor")]
+  private Color _drawColor;
+
+  [SerializeField]
+  [FormerlySerializedAs("someoneGuessedColor")]
+  private Color _someoneGuessedColor;
+
+  [SerializeField]
+  [FormerlySerializedAs("youGuessedColor")]
+  private Color _youGuessedColor;
+
+  [SerializeField]
+  [FormerlySerializedAs("wordLabel")]
+  private Text _wordLabel;
 
   private Color _defaultBackgroundColor;
 
   private void Start() {
-    _defaultBackgroundColor = backgroundImage.color;
+    _defaultBackgroundColor = _backgroundImage.color;
   }
 
   void Update() {
     //Show or hide controls
-    switch (GameCoordinator.instance.gameState) {
+    switch (GameCoordinator.instance.CurrentState) {
       case GameCoordinator.GameState.Lobby:
-        group.alpha = 0;
+        _group.alpha = 0;
         break;
       case GameCoordinator.GameState.ClassicGame:
-        group.alpha = 1;
+        _group.alpha = 1;
         break;
     }
 
-    if (GameCoordinator.instance.isGamePaused) {
-      pauseImage.sprite = resumeSprite;
+    if (GameCoordinator.instance.IsGamePaused) {
+      _pauseImage.sprite = _resumeSprite;
     } else {
-      pauseImage.sprite = pauseSprite;
+      _pauseImage.sprite = _pauseSprite;
     }
 
-    float timeLeft = Mathf.Max(0, GameCoordinator.instance.timeLeft + 0.999f);
+    float timeLeft = Mathf.Max(0, GameCoordinator.instance.TimeLeft + 0.999f);
     int timeLeftMinutes = Mathf.FloorToInt(timeLeft / 60);
     int timeLeftSeconds = Mathf.FloorToInt(timeLeft - timeLeftMinutes * 60);
-    timeLeftLabel.text = timeLeftMinutes + ":" + timeLeftSeconds.ToString().PadLeft(2, '0');
+    _timeLeftLabel.text = timeLeftMinutes + ":" + timeLeftSeconds.ToString().PadLeft(2, '0');
 
     //Set the background color
     {
       Color color = _defaultBackgroundColor;
 
-      switch (GameCoordinator.instance.gameState) {
+      switch (GameCoordinator.instance.CurrentState) {
         case GameCoordinator.GameState.ClassicGame:
-          if (GameCoordinator.instance.drawingPlayer == Player.local) {
-            color = drawColor;
+          if (GameCoordinator.instance.DrawingPlayer == Player.Local) {
+            color = _drawColor;
           }
 
-          if (Player.all.Any(p => p.hasGuessed)) {
-            if (GameCoordinator.instance.drawingBoard == Player.local) {
-              color = youGuessedColor;
+          if (Player.All.Any(p => p.HasGuessed)) {
+            if (GameCoordinator.instance.DrawingBoard == Player.Local) {
+              color = _youGuessedColor;
             } else {
-              color = someoneGuessedColor;
+              color = _someoneGuessedColor;
             }
           }
 
-          if (Player.local.hasGuessed) {
-            color = youGuessedColor;
+          if (Player.Local.HasGuessed) {
+            color = _youGuessedColor;
           }
           break;
       }
 
-      backgroundImage.color = color;
+      _backgroundImage.color = color;
     }
 
     //Set the main word label
-    switch (GameCoordinator.instance.gameState) {
+    switch (GameCoordinator.instance.CurrentState) {
       case GameCoordinator.GameState.Lobby:
-        wordLabel.text = "";
+        _wordLabel.text = "";
         break;
       case GameCoordinator.GameState.ClassicGame:
-        if (GameCoordinator.instance.drawingPlayer == Player.local && GameCoordinator.instance.currentWord != "") {
-          string[] tokens = GameCoordinator.instance.currentWord.Split();
-          wordLabel.text = string.Join(" ", tokens.Select(t => char.ToUpper(t[0]) + t.Substring(1)).ToArray());
+        if (GameCoordinator.instance.DrawingPlayer == Player.Local && GameCoordinator.instance.CurrentWord != "") {
+          string[] tokens = GameCoordinator.instance.CurrentWord.Split();
+          _wordLabel.text = string.Join(" ", tokens.Select(t => char.ToUpper(t[0]) + t.Substring(1)).ToArray());
         } else {
-          wordLabel.text = "";
+          _wordLabel.text = "";
         }
         break;
     }
 
     //Set the turns left label
-    switch (GameCoordinator.instance.gameState) {
+    switch (GameCoordinator.instance.CurrentState) {
       case GameCoordinator.GameState.Lobby:
-        turnsLeftLabel.text = "";
+        _turnsLeftLabel.text = "";
         break;
       case GameCoordinator.GameState.ClassicGame:
-        turnsLeftLabel.text = GameCoordinator.instance.turnsLeft.ToString();
+        _turnsLeftLabel.text = GameCoordinator.instance.TurnsLeft.ToString();
         break;
     }
   }
 
   public void OnClickPauseUnpauseButton() {
-    if (GameCoordinator.instance.isGamePaused) {
-      Player.local.CmdUnpauseGame();
+    if (GameCoordinator.instance.IsGamePaused) {
+      Player.Local.CmdUnpauseGame();
     } else {
-      Player.local.CmdPauseGame();
+      Player.Local.CmdPauseGame();
     }
   }
 
   public void OnClickRejectWord() {
-    Player.local.CmdRejectWord(Player.local.netId);
+    Player.Local.CmdRejectWord(Player.Local.netId);
   }
 }

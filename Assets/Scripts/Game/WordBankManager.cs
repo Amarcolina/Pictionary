@@ -22,7 +22,7 @@ public class WordBankManager : ScriptableObject {
     }
   }
 
-  public WordBank bank {
+  public WordBank Bank {
     get {
       if (_activeWordBank == null) {
         var defaultWords = defaultWordList.text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);

@@ -1,20 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class NetworkedTime {
 
   private float _updateTimestamp;
   private float _updateValue;
 
-  public float rate;
+  private float _rate;
   private float _prevValue;
 
-  public float value {
+  public float Rate {
     get {
-      float newValue = (Time.realtimeSinceStartup - _updateTimestamp) * rate + _updateValue;
+      return _rate;
+    }
+    set {
+      _rate = value;
+    }
+  }
 
-      if (rate < 0) {
+  public float Value {
+    get {
+      float newValue = (Time.realtimeSinceStartup - _updateTimestamp) * _rate + _updateValue;
+
+      if (_rate < 0) {
         newValue = Mathf.Min(newValue, _prevValue);
       } else {
         newValue = Mathf.Max(newValue, _prevValue);
@@ -36,6 +43,6 @@ public class NetworkedTime {
   }
 
   public static implicit operator float(NetworkedTime time) {
-    return time.value;
+    return time.Value;
   }
 }

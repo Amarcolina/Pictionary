@@ -4,16 +4,38 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
 using UnityEngine.Networking;
+using UnityEngine.Serialization;
 
 [NetworkSettings(channel = 2, sendInterval = SEND_INTERVAL)]
 public class DrawingBoard : NetworkBehaviour {
   public const float SEND_INTERVAL = 1.0f / 20.0f;
   public const float INTERP_BUFFER = 1.0f / 40.0f;
 
-  public int resolutionX, resolutionY;
-  public int maxActionsPerFrame = 20;
-  public Image boardImage;
-  public Image previewImagePrefab;
+  [SerializeField]
+  [FormerlySerializedAs("resolutionX")]
+  private int _resolutionX;
+  public int ResolutionX {
+    get { return _resolutionX; }
+  }
+
+  [SerializeField]
+  [FormerlySerializedAs("resolutionY")]
+  private int _resolutionY;
+  public int ResolutionY {
+    get { return _resolutionY; }
+  }
+
+  [SerializeField]
+  [FormerlySerializedAs("maxActionsPerFrame")]
+  private int _maxActionsPerFrame = 20;
+
+  [SerializeField]
+  [FormerlySerializedAs("boardImage")]
+  private Image _boardImage;
+
+  [SerializeField]
+  [FormerlySerializedAs("previewImagePrefab")]
+  private Image _previewImagePrefab;
 
   private DrawableCanvas _boardCanvas;
 
@@ -30,23 +52,23 @@ public class DrawingBoard : NetworkBehaviour {
   private float _latestBrushTimestamp;
   private float _latestBrushDisplayTime;
 
-  public float boardDisplayTime {
+  public float BoardDisplayTime {
     get {
-      return (GameCoordinator.instance.gameTime - _latestBrushDisplayTime) + _latestBrushTimestamp;
+      return (GameCoordinator.instance.GameTime - _latestBrushDisplayTime) + _latestBrushTimestamp;
     }
   }
 
-  public DrawableCanvas canvas {
+  public DrawableCanvas Canvas {
     get {
       return _boardCanvas;
     }
   }
 
   private void Awake() {
-    _boardCanvas = new DrawableCanvas(resolutionX, resolutionY);
+    _boardCanvas = new DrawableCanvas(_resolutionX, _resolutionY);
 
-    var sprite = Sprite.Create(_boardCanvas.texture, new Rect(0, 0, resolutionX, resolutionY), Vector2.zero);
-    boardImage.sprite = sprite;
+    var sprite = Sprite.Create(_boardCanvas.Texture, new Rect(0, 0, _resolutionX, _resolutionY), Vector2.zero);
+    _boardImage.sprite = sprite;
   }
 
   private void OnDestroy() {
@@ -60,10 +82,10 @@ public class DrawingBoard : NetworkBehaviour {
   private Image getPreviewImage(NetworkInstanceId player) {
     Image image;
     if (!_previewImages.TryGetValue(player.Value, out image)) {
-      image = Instantiate(previewImagePrefab);
+      image = Instantiate(_previewImagePrefab);
 
       image.transform.SetParent(transform.parent, worldPositionStays: true);
-      image.transform.localPosition = previewImagePrefab.transform.localPosition;
+      image.transform.localPosition = _previewImagePrefab.transform.localPosition;
 
       image.gameObject.SetActive(true);
       _previewImages[player.Value] = image;
@@ -75,10 +97,10 @@ public class DrawingBoard : NetworkBehaviour {
   private DrawableCanvas getPreviewCanvas(NetworkInstanceId player) {
     DrawableCanvas canvas;
     if (!_previewCanvases.TryGetValue(player.Value, out canvas)) {
-      canvas = new DrawableCanvas(resolutionX, resolutionY);
+      canvas = new DrawableCanvas(_resolutionX, _resolutionY);
       _previewCanvases[player.Value] = canvas;
 
-      var sprite = Sprite.Create(canvas.texture, new Rect(0, 0, resolutionX, resolutionY), Vector2.zero);
+      var sprite = Sprite.Create(canvas.Texture, new Rect(0, 0, _resolutionX, _resolutionY), Vector2.zero);
       getPreviewImage(player).sprite = sprite;
     }
 
@@ -87,7 +109,7 @@ public class DrawingBoard : NetworkBehaviour {
 
   [Server]
   public void ApplyBrushAction(BrushAction action) {
-    action.time = GameCoordinator.instance.gameTime;
+    action.time = GameCoordinator.instance.GameTime;
     SetDirtyBit(1);
 
     //We add the brush action to the send queue so that
@@ -105,7 +127,7 @@ public class DrawingBoard : NetworkBehaviour {
   public void ClearAndReset() {
     var clearAction = new BrushAction() {
       type = BrushActionType.Clear,
-      drawerId = Player.local.netId
+      drawerId = Player.Local.netId
     };
 
     //We apply a brush action to clear all clients
@@ -115,7 +137,7 @@ public class DrawingBoard : NetworkBehaviour {
 
     //We also send preview actions to everybody so that 
     //things get cleared out
-    foreach (var player in Player.all) {
+    foreach (var player in Player.All) {
       ApplyBrushAction(new BrushAction() {
         type = BrushActionType.Line,
         position0 = new Vector2Int(-100, -100),
@@ -129,7 +151,7 @@ public class DrawingBoard : NetworkBehaviour {
 
   [Client]
   public void PredictBrushAction(BrushAction action) {
-    Assert.AreEqual(action.drawerId, Player.local.netId);
+    Assert.AreEqual(action.drawerId, Player.Local.netId);
     drawBrushActionToCanvases(action);
   }
 
@@ -138,12 +160,12 @@ public class DrawingBoard : NetworkBehaviour {
       var action = _toDrawQueue.Peek();
 
       //Skip actions that are from ourselves because those are predicted
-      if (action.drawerId == Player.local.netId) {
+      if (action.drawerId == Player.Local.netId) {
         _toDrawQueue.Dequeue();
         continue;
       }
 
-      if ((action.time + SEND_INTERVAL + INTERP_BUFFER) < GameCoordinator.instance.gameTime) {
+      if ((action.time + SEND_INTERVAL + INTERP_BUFFER) < GameCoordinator.instance.GameTime) {
         Queue<BrushAction> queue;
         if (!_toDrawQueues.TryGetValue(action.drawerId, out queue)) {
           queue = new Queue<BrushAction>();
@@ -161,7 +183,7 @@ public class DrawingBoard : NetworkBehaviour {
       var player = pair.Key;
       var queue = pair.Value;
 
-      if (player == Player.local.netId) {
+      if (player == Player.Local.netId) {
         continue;
       }
 
@@ -174,12 +196,12 @@ public class DrawingBoard : NetworkBehaviour {
 
         if (!action.isPreview) {
           _latestBrushTimestamp = Mathf.Max(_latestBrushTimestamp, action.time);
-          _latestBrushDisplayTime = Mathf.Max(_latestBrushDisplayTime, GameCoordinator.instance.gameTime);
+          _latestBrushDisplayTime = Mathf.Max(_latestBrushDisplayTime, GameCoordinator.instance.GameTime);
 
           _boardCanvas.ApplyBrushAction(action);
           actionsTaken++;
 
-          if (actionsTaken >= maxActionsPerFrame) {
+          if (actionsTaken >= _maxActionsPerFrame) {
             break;
           }
         }
@@ -229,7 +251,7 @@ public class DrawingBoard : NetworkBehaviour {
   }
 
   private void serializeBrushActions(NetworkWriter writer) {
-    int toSend = Mathf.Min(maxActionsPerFrame, _toSendQueue.Count);
+    int toSend = Mathf.Min(_maxActionsPerFrame, _toSendQueue.Count);
 
     writer.WritePackedUInt32((uint)toSend);
 

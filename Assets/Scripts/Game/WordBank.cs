@@ -32,10 +32,10 @@ public class WordTransaction {
 
     _isTransactionComplete = true;
     _endWordDelegate(new WordBank.WordData.TurnData() {
-      wasRejected = _isRejected,
-      rejectTime = _rejectedTime,
-      totalPlayers = _playerCount,
-      guessTimes = _guessTimes.ToArray()
+      WasRejected = _isRejected,
+      RejectTime = _rejectedTime,
+      TotalPlayers = _playerCount,
+      GuessTimes = _guessTimes.ToArray()
     });
   }
 
@@ -129,7 +129,7 @@ public class WordBank {
                       ToArray();
   }
 
-  public int wordCount {
+  public int WordCount {
     get {
       return _wordData.Length;
     }
@@ -164,8 +164,8 @@ public class WordBank {
       _entryHistory.RemoveAt(_entryHistory.Count - 1);
     }
 
-    WordData wordData = _wordData.Single(d => d.word == _currentTransaction.word);
-    wordData.turnData.Add(turnData);
+    WordData wordData = _wordData.Single(d => d.Word == _currentTransaction.word);
+    wordData.Turns.Add(turnData);
 
     _currentTransaction = null;
   }
@@ -178,16 +178,16 @@ public class WordBank {
   /// This method returns true if any modifications were actually made, and false otherwise.
   /// </summary>
   public bool MatchToWordList(IEnumerable<string> wordList) {
-    if (new HashSet<string>(wordList).SetEquals(_wordData.Select(d => d.word))) {
+    if (new HashSet<string>(wordList).SetEquals(_wordData.Select(d => d.Word))) {
       return false;
     }
 
     //Remove all words that are not in the word list
-    _wordData = _wordData.Where(d => wordList.Contains(d.word)).ToArray();
+    _wordData = _wordData.Where(d => wordList.Contains(d.Word)).ToArray();
     _entryHistory = _entryHistory.Where(w => wordList.Contains(w)).ToList();
 
     //Words to add are all legal words except the ones already in this word bank
-    var wordsToAdd = wordList.Except(_wordData.Select(d => d.word));
+    var wordsToAdd = wordList.Except(_wordData.Select(d => d.Word));
     _wordData = _wordData.Concat(wordsToAdd.Select(w => new WordData(w))).ToArray();
 
     return true;
@@ -198,15 +198,15 @@ public class WordBank {
     /// <summary>
     /// The actual word itself
     /// </summary>
-    public string word;
+    public string Word;
 
     /// <summary>
     /// Every turn where this word came up as an option
     /// </summary>
-    public List<TurnData> turnData = new List<TurnData>();
+    public List<TurnData> Turns = new List<TurnData>();
 
     public WordData(string word) {
-      this.word = word;
+      Word = word;
     }
 
     [Serializable]
@@ -215,40 +215,40 @@ public class WordBank {
       /// <summary>
       /// Whether or not the word was rejected during this turn
       /// </summary>
-      public bool wasRejected;
+      public bool WasRejected;
 
       /// <summary>
       /// A normalized time it took for someone to reject the word.  0 is no time at all, 1
       /// is a full turn.
       /// </summary>
-      public float rejectTime;
+      public float RejectTime;
 
       /// <summary>
       /// The total number of players playing during this turn
       /// </summary>
-      public int totalPlayers;
+      public int TotalPlayers;
 
       /// <summary>
       /// A normalized collection of times it took people to guess the word.  0 is no time at all,
       /// 1 is a full turn.  This array only contains values for actual guesses.
       /// </summary>
-      public float[] guessTimes;
+      public float[] GuessTimes;
 
       /// <summary>
       /// A total number of players that successfully guessed this turn
       /// </summary>
-      public int successPlayers {
+      public int SuccessPlayers {
         get {
-          return guessTimes.Length;
+          return GuessTimes.Length;
         }
       }
 
       /// <summary>
       /// The total number of players that failed to guess correctly this turn
       /// </summary>
-      public int failPlayers {
+      public int FailPlayers {
         get {
-          return totalPlayers - successPlayers;
+          return TotalPlayers - SuccessPlayers;
         }
       }
     }
@@ -256,36 +256,36 @@ public class WordBank {
     /// <summary>
     /// The total number of turns where this word came up as an option
     /// </summary>
-    public int totalTurnsSeen {
+    public int TotalTurnsSeen {
       get {
-        return turnData.Count;
+        return Turns.Count;
       }
     }
 
     /// <summary>
     /// The total number of turns where this word was rejected instead of being played
     /// </summary>
-    public int totalRejections {
+    public int TotalRejections {
       get {
-        return turnData.Count(s => s.wasRejected);
+        return Turns.Count(s => s.WasRejected);
       }
     }
 
     /// <summary>
     /// Total number of games this word was used in where it was not rejected.
     /// </summary>
-    public int totalTurnsPlayed {
+    public int TotalTurnsPlayed {
       get {
-        return totalTurnsSeen - totalRejections;
+        return TotalTurnsSeen - TotalRejections;
       }
     }
 
     /// <summary>
     /// Total number of games where this word was guessed successfully
     /// </summary>
-    public int totalSuccessTurns {
+    public int TotalSuccessTurns {
       get {
-        return turnData.Count(s => s.guessTimes.Length > 0);
+        return Turns.Count(s => s.GuessTimes.Length > 0);
       }
     }
 
@@ -293,13 +293,13 @@ public class WordBank {
     /// Total number of games played where the word was never guessed.  Does
     /// not count games where the word was rejected.
     /// </summary>
-    public int totalFailTurns {
+    public int TotalFailTurns {
       get {
-        return totalTurnsPlayed - totalSuccessTurns;
+        return TotalTurnsPlayed - TotalSuccessTurns;
       }
     }
 
-    public float difficulty {
+    public float Difficulty {
       get {
         //The basic ratio difficulty.  How many games was there at least 1 success, vs how many games
         //were there no successes at all.  Rejections makes this ratio go up!  If the number of games
@@ -307,28 +307,28 @@ public class WordBank {
         float successFailDifficulty;
         float successFailWeight;
         {
-          int mockSuccess = totalSuccessTurns + Mathf.Max(0, 3 - totalTurnsSeen);
+          int mockSuccess = TotalSuccessTurns + Mathf.Max(0, 3 - TotalTurnsSeen);
 
           successFailWeight = 1;
-          successFailDifficulty = 1.0f - successFailWeight * mockSuccess / Mathf.Min(3, totalTurnsSeen);
+          successFailDifficulty = 1.0f - successFailWeight * mockSuccess / Mathf.Min(3, TotalTurnsSeen);
         }
 
         //The failure ratio difficulty.  This difficulty gets higher the fewer people can guess a word
         //during a turn.  The weight starts at 0 and increases to max after 3 turns.
         float failureRatioDifficulty = 0;
         float failureRatioWeight = 0;
-        if (totalTurnsPlayed > 0) {
-          failureRatioWeight = Mathf.Lerp(Mathf.InverseLerp(1, 3, totalTurnsPlayed), 0.5f, 1.0f);
-          failureRatioDifficulty = turnData.Where(t => !t.wasRejected).Select(t => t.failPlayers / (float)t.totalPlayers).Average();
+        if (TotalTurnsPlayed > 0) {
+          failureRatioWeight = Mathf.Lerp(Mathf.InverseLerp(1, 3, TotalTurnsPlayed), 0.5f, 1.0f);
+          failureRatioDifficulty = Turns.Where(t => !t.WasRejected).Select(t => t.FailPlayers / (float)t.TotalPlayers).Average();
         }
 
         //The failure time difficulty.  This difficulty gets higher the longer it takes to guess a word.
         //The weight starts at 0 and increases to max after 3 turns.
         float guessSpeedDifficulty = 0;
         float guessSpeedWeight = 0;
-        if (totalTurnsPlayed > 0) {
-          guessSpeedWeight = Mathf.Lerp(Mathf.InverseLerp(1, 3, totalTurnsPlayed), 0.25f, 0.5f);
-          guessSpeedDifficulty = turnData.Where(t => !t.wasRejected).Select(t => t.guessTimes.Min()).Average();
+        if (TotalTurnsPlayed > 0) {
+          guessSpeedWeight = Mathf.Lerp(Mathf.InverseLerp(1, 3, TotalTurnsPlayed), 0.25f, 0.5f);
+          guessSpeedDifficulty = Turns.Where(t => !t.WasRejected).Select(t => t.GuessTimes.Min()).Average();
         }
 
         return (successFailDifficulty + failureRatioDifficulty + guessSpeedDifficulty) /
@@ -341,11 +341,11 @@ public class WordBank {
     }
 
     public bool Equals(WordData word) {
-      return this.word == word.word;
+      return Word == word.Word;
     }
 
     public override int GetHashCode() {
-      return word.GetHashCode();
+      return Word.GetHashCode();
     }
   }
 }

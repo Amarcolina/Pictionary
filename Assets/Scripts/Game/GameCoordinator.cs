@@ -23,13 +23,13 @@ public class GameCoordinator : NetworkBehaviour {
 
   [SerializeField]
   private MessageBoard _messageBoard;
-  public MessageBoard messageBoard {
+  public MessageBoard MessageBoard {
     get { return _messageBoard; }
   }
 
   [SerializeField]
   private DrawingBoard _drawingBoard;
-  public DrawingBoard drawingBoard {
+  public DrawingBoard DrawingBoard {
     get { return _drawingBoard; }
   }
 
@@ -44,20 +44,20 @@ public class GameCoordinator : NetworkBehaviour {
 
   [Header("Game Data")]
   [SyncVar, SerializeField]
-  private GameState _gameState = GameState.Lobby;
-  public GameState gameState {
-    get { return _gameState; }
+  private GameState _currentState = GameState.Lobby;
+  public GameState CurrentState {
+    get { return _currentState; }
   }
 
   [SyncVar, SerializeField]
   private bool _isGamePaused = false;
-  public bool isGamePaused {
+  public bool IsGamePaused {
     get { return _isGamePaused; }
   }
 
   [SyncVar, SerializeField]
   private int _turnsLeft;
-  public int turnsLeft {
+  public int TurnsLeft {
     get { return _turnsLeft; }
   }
 
@@ -68,7 +68,7 @@ public class GameCoordinator : NetworkBehaviour {
   private uint _drawingPlayerId; //networkinstanceid
   private WordTransaction _currentWordTransaction = null;
   private string _currentWordClient = "";
-  public string currentWord {
+  public string CurrentWord {
     get {
       if (_currentWordTransaction != null) {
         return _currentWordTransaction.word;
@@ -78,12 +78,12 @@ public class GameCoordinator : NetworkBehaviour {
     }
   }
 
-  public NetworkedTime gameTime { get; private set; }
-  public NetworkedTime timeLeft { get; private set; }
+  public NetworkedTime GameTime { get; private set; }
+  public NetworkedTime TimeLeft { get; private set; }
 
-  public Player drawingPlayer {
+  public Player DrawingPlayer {
     get {
-      foreach (var player in Player.all) {
+      foreach (var player in Player.All) {
         if (player.netId.Value == _drawingPlayerId) {
           return player;
         }
@@ -94,7 +94,7 @@ public class GameCoordinator : NetworkBehaviour {
 
   [Server]
   public void SubmitPauseGame() {
-    switch (_gameState) {
+    switch (_currentState) {
       case GameState.Lobby:
         lobbySubmitPauseGame();
         break;
@@ -106,7 +106,7 @@ public class GameCoordinator : NetworkBehaviour {
 
   [Server]
   public void SubmitResumeGame() {
-    switch (_gameState) {
+    switch (_currentState) {
       case GameState.Lobby:
         lobbySubmitResumeGame();
         break;
@@ -122,7 +122,7 @@ public class GameCoordinator : NetworkBehaviour {
       return;
     }
 
-    switch (_gameState) {
+    switch (_currentState) {
       case GameState.Lobby:
         lobbySubmitMessage(player, message);
         return;
@@ -140,7 +140,7 @@ public class GameCoordinator : NetworkBehaviour {
   }
 
   public bool CanPlayerDraw(Player player) {
-    switch (_gameState) {
+    switch (_currentState) {
       case GameState.Lobby:
         return lobbyCanPlayerDraw(player);
       case GameState.ClassicGame:
@@ -157,12 +157,12 @@ public class GameCoordinator : NetworkBehaviour {
   private void Awake() {
     _cachedInstance = this;
 
-    gameTime = new NetworkedTime() {
-      rate = 1
+    GameTime = new NetworkedTime() {
+      Rate = 1
     };
 
-    timeLeft = new NetworkedTime() {
-      rate = -1
+    TimeLeft = new NetworkedTime() {
+      Rate = -1
     };
   }
 
@@ -182,7 +182,7 @@ public class GameCoordinator : NetworkBehaviour {
   }
 
   private void Update() {
-    switch (_gameState) {
+    switch (_currentState) {
       case GameState.Lobby:
         lobbyUpdate();
         break;
@@ -197,11 +197,11 @@ public class GameCoordinator : NetworkBehaviour {
   private float _serverTimeLeft;
 
   private void OnDraw(BrushAction brush) {
-    brush.drawerId = Player.local.netId;
+    brush.drawerId = Player.Local.netId;
 
-    if (CanPlayerDraw(Player.local)) {
+    if (CanPlayerDraw(Player.Local)) {
       _drawingBoard.PredictBrushAction(brush);
-      Player.local.CmdDraw(brush);
+      Player.Local.CmdDraw(brush);
     }
   }
 
@@ -216,12 +216,12 @@ public class GameCoordinator : NetworkBehaviour {
 
   [ClientRpc]
   private void RpcUpdateGameTime(float time, bool forceUpdate) {
-    gameTime.Update(time, forceUpdate);
+    GameTime.Update(time, forceUpdate);
   }
 
   [ClientRpc]
   private void RpcUpdateTimeLeft(float time, bool forceUpdate) {
-    timeLeft.Update(time, forceUpdate);
+    TimeLeft.Update(time, forceUpdate);
   }
 
   [Server]
@@ -230,22 +230,22 @@ public class GameCoordinator : NetworkBehaviour {
     tokens[0] = tokens[0].ToLower();
 
     if (tokens[0] == "/name") {
-      string prevName = player.gameName;
+      string prevName = player.GameName;
       string newName = string.Join(" ", tokens.Skip(1).ToArray()).Trim();
 
       if (newName.Length == 0) {
-        messageBoard.TargetSubmitMessage(player.connectionToClient, Message.Server("Cannot change your name to nothing."));
+        MessageBoard.TargetSubmitMessage(player.connectionToClient, Message.Server("Cannot change your name to nothing."));
         return true;
       }
 
-      player.gameName = newName;
+      player.GameName = newName;
       player.RpcUpdateNamePreference(newName);
-      messageBoard.RpcSubmitMessage(Message.Server(prevName + " changed their name to " + newName));
+      MessageBoard.RpcSubmitMessage(Message.Server(prevName + " changed their name to " + newName));
       return true;
     }
 
     if (tokens[0] == "/help") {
-      messageBoard.TargetSubmitMessage(player.connectionToClient, new Message() {
+      MessageBoard.TargetSubmitMessage(player.connectionToClient, new Message() {
         netId = NetworkInstanceId.Invalid,
         boardDisplayTime = 0,
         color = new Color32(0, 0, 0, 0),
@@ -273,10 +273,10 @@ public class GameCoordinator : NetworkBehaviour {
   #region LOBBY LOGIC
 
   public void StartLobby() {
-    _gameState = GameState.Lobby;
+    _currentState = GameState.Lobby;
 
-    foreach (var player in Player.all) {
-      player.isInGame = false;
+    foreach (var player in Player.All) {
+      player.IsInGame = false;
     }
 
     _currentWordClient = "";
@@ -291,7 +291,7 @@ public class GameCoordinator : NetworkBehaviour {
     }
 
     //All players can message in the lobby
-    messageBoard.RpcSubmitMessage(message);
+    MessageBoard.RpcSubmitMessage(message);
   }
 
   [Server]
@@ -314,7 +314,7 @@ public class GameCoordinator : NetworkBehaviour {
       if (player.isServer) {
         StartClassicGame();
       } else {
-        messageBoard.TargetSubmitMessage(player.connectionToClient, Message.Server("Only the server can start a game."));
+        MessageBoard.TargetSubmitMessage(player.connectionToClient, Message.Server("Only the server can start a game."));
       }
       return true;
     }
@@ -333,19 +333,19 @@ public class GameCoordinator : NetworkBehaviour {
   [Server]
   public void StartClassicGame() {
     Debug.Log("Starting classic game...");
-    _gameState = GameState.ClassicGame;
+    _currentState = GameState.ClassicGame;
 
     //Join all players
-    foreach (var player in Player.all) {
-      player.isInGame = true;
-      player.score = 0;
+    foreach (var player in Player.All) {
+      player.IsInGame = true;
+      player.Score = 0;
     }
 
-    _drawingPlayerId = Player.all[Random.Range(0, Player.all.Count)].netId.Value;
+    _drawingPlayerId = Player.All[Random.Range(0, Player.All.Count)].netId.Value;
     RpcUpdateDrawingPlayer(_drawingPlayerId);
 
     _turnsLeft = _turnsPerGame.value;
-    while ((_turnsLeft % Player.all.Count) != 0) {
+    while ((_turnsLeft % Player.All.Count) != 0) {
       _turnsLeft++;
     }
 
@@ -354,7 +354,7 @@ public class GameCoordinator : NetworkBehaviour {
 
   [Server]
   public void RejectCurrentWord(NetworkInstanceId clickerId) {
-    Player clickingPlayer = Player.all.FirstOrDefault(p => p.netId == clickerId);
+    Player clickingPlayer = Player.All.FirstOrDefault(p => p.netId == clickerId);
     if (clickingPlayer == null) {
       Debug.LogError("Could not find player with id " + clickerId);
       return;
@@ -362,9 +362,9 @@ public class GameCoordinator : NetworkBehaviour {
 
     //If the clicking player is also the drawing player
     //And as long as nobody has guessed yet
-    if (clickingPlayer == drawingPlayer && Player.all.All(p => !p.hasGuessed)) {
+    if (clickingPlayer == DrawingPlayer && Player.All.All(p => !p.HasGuessed)) {
       //First we let everybody know the word has been rejected, and what the word was
-      messageBoard.RpcSubmitMessage(Message.Server(clickingPlayer.gameName + " has rejected the word " + currentWord + "."));
+      MessageBoard.RpcSubmitMessage(Message.Server(clickingPlayer.GameName + " has rejected the word " + CurrentWord + "."));
 
       //Then we record the rejection in the current word transaction, and complete the transaction
       _currentWordTransaction.Reject(1.0f - _serverTimeLeft / _timePerTurn.value);
@@ -379,7 +379,7 @@ public class GameCoordinator : NetworkBehaviour {
 
   private void classicUpdate() {
     if (isServer) {
-      if (drawingPlayer == null) {
+      if (DrawingPlayer == null) {
         finishTurn();
       }
 
@@ -391,7 +391,7 @@ public class GameCoordinator : NetworkBehaviour {
         }
       }
 
-      if (Player.all.All(p => p.timerHasReachedZero)) {
+      if (Player.All.All(p => p.TimerHasReachedZero)) {
         finishTurn();
       }
     }
@@ -410,53 +410,53 @@ public class GameCoordinator : NetworkBehaviour {
   [Server]
   private void classicSubmitMessage(Player player, Message message) {
     //Only players who are currently playing can message
-    if (!player.isInGame) {
+    if (!player.IsInGame) {
       return;
     }
 
     //Allow the server to stop the game if they want to
     if (message.text == "/stop") {
       if (player.isServer) {
-        messageBoard.RpcSubmitMessage(Message.Server("The server stopped the game."));
+        MessageBoard.RpcSubmitMessage(Message.Server("The server stopped the game."));
         StartLobby();
       } else {
-        messageBoard.TargetSubmitMessage(player.connectionToClient, Message.Server("Only the server can stop an in-progress game."));
+        MessageBoard.TargetSubmitMessage(player.connectionToClient, Message.Server("Only the server can stop an in-progress game."));
       }
       return;
     }
 
     //Drawing player cannot message at all
-    if (player == drawingPlayer) {
+    if (player == DrawingPlayer) {
       return;
     }
 
     //Players that have already guessed cannot message anymore
-    if (player.hasGuessed) {
+    if (player.HasGuessed) {
       return;
     }
 
     //If the guess is correct
-    if (WordUtility.DoesGuessMatch(message.text, currentWord)) {
+    if (WordUtility.DoesGuessMatch(message.text, CurrentWord)) {
       _currentWordTransaction.NotifyGuess(1 - message.timeLeft / _timePerTurn.value);
 
       //Send the message only to the player who guessed
-      messageBoard.TargetSubmitMessage(player.connectionToClient, message);
+      MessageBoard.TargetSubmitMessage(player.connectionToClient, message);
 
       //Don't submit the actual message to the rest, just tell everyone that they have guessed correctly
-      messageBoard.RpcSubmitMessage(Message.Server(player.gameName + " has guessed!"));
+      MessageBoard.RpcSubmitMessage(Message.Server(player.GameName + " has guessed!"));
 
       player.guessTime = message.boardDisplayTime;
-      player.hasGuessed = true;
+      player.HasGuessed = true;
 
       //If all guessing players have guessed, start next turn
-      if (Player.all.Where(p => p.isInGame && p != drawingPlayer).All(p => p.hasGuessed)) {
+      if (Player.All.Where(p => p.IsInGame && p != DrawingPlayer).All(p => p.HasGuessed)) {
         finishTurn();
         return;
       }
 
       //If this is the first person to guess
       //Set the time to be 15 seconds remaining!
-      if (Player.all.Count(p => p.hasGuessed) == 1) {
+      if (Player.All.Count(p => p.HasGuessed) == 1) {
         _serverTimeLeft = _endOfGameDelay.value;
         RpcUpdateTimeLeft(_serverTimeLeft, forceUpdate: true);
         return;
@@ -466,18 +466,18 @@ public class GameCoordinator : NetworkBehaviour {
     }
 
     //If the guess is close it is not broadcast to the rest of the players
-    if (WordUtility.IsGuessClose(message.text, currentWord)) {
-      messageBoard.TargetSubmitMessage(player.connectionToClient, message);
-      messageBoard.TargetSubmitMessage(player.connectionToClient, Message.Server("Your guess is close"));
+    if (WordUtility.IsGuessClose(message.text, CurrentWord)) {
+      MessageBoard.TargetSubmitMessage(player.connectionToClient, message);
+      MessageBoard.TargetSubmitMessage(player.connectionToClient, Message.Server("Your guess is close"));
       return;
     }
 
-    messageBoard.RpcSubmitMessage(message);
+    MessageBoard.RpcSubmitMessage(message);
   }
 
   private bool classicCanPlayerDraw(Player player) {
     //Only the currently drawing player can draw :D
-    return player == drawingPlayer;
+    return player == DrawingPlayer;
   }
 
   [Server]
@@ -485,29 +485,29 @@ public class GameCoordinator : NetworkBehaviour {
     Debug.Log("Finishing turn...");
 
     Assert.IsNotNull(_currentWordTransaction, "We should always be undergoing a word transaction before finishing a turn.");
-    messageBoard.RpcSubmitMessage(Message.Server("The word was " + currentWord));
+    MessageBoard.RpcSubmitMessage(Message.Server("The word was " + CurrentWord));
 
     _currentWordTransaction.CompleteTransaction();
     _currentWordTransaction = null;
     _wordBankManager.SaveActiveWordBank();
 
-    if (Player.all.Any(p => p.hasGuessed)) {
+    if (Player.All.Any(p => p.HasGuessed)) {
       //Drawing player gets 9 points as long as someone has guessed
       //Plus 1 point for every player who guessed (which is at least 1)
-      drawingPlayer.score += 9 + Player.all.Count(p => p.hasGuessed);
+      DrawingPlayer.Score += 9 + Player.All.Count(p => p.HasGuessed);
 
       //All other players get points based on the order they guessed
       //First to guess gets 10, next gets 9, and so on
       //A player that guesses always gets at least 1 point
       int points = 10;
-      foreach (var player in Player.all.Where(p => p.hasGuessed).OrderBy(p => p.guessTime)) {
-        player.score += points;
+      foreach (var player in Player.All.Where(p => p.HasGuessed).OrderBy(p => p.guessTime)) {
+        player.Score += points;
         points = Mathf.Max(1, points - 1);
       }
     }
 
     //Start the lobby if there are not enough players to play a game
-    if (Player.all.Count(p => p.isInGame) <= 1) {
+    if (Player.All.Count(p => p.IsInGame) <= 1) {
       Debug.Log("Starting lobby because there were not enough players...");
       StartLobby();
       return;
@@ -517,13 +517,13 @@ public class GameCoordinator : NetworkBehaviour {
     //And end the game if we have reached zero turns!
     _turnsLeft--;
     if (_turnsLeft == 0) {
-      int maxScore = Player.inGame.Select(p => p.score).Max();
-      var winners = Player.inGame.Where(p => p.score == maxScore);
+      int maxScore = Player.InGame.Select(p => p.Score).Max();
+      var winners = Player.InGame.Where(p => p.Score == maxScore);
       if (winners.Count() == 1) {
         var winner = winners.Single();
-        messageBoard.RpcSubmitMessage(Message.Server("Player " + winner.gameName + " wins!"));
+        MessageBoard.RpcSubmitMessage(Message.Server("Player " + winner.GameName + " wins!"));
       } else {
-        messageBoard.RpcSubmitMessage(Message.Server("Game is a tie between " + string.Join(" and ", winners.Select(p => p.gameName).ToArray()) + "!"));
+        MessageBoard.RpcSubmitMessage(Message.Server("Game is a tie between " + string.Join(" and ", winners.Select(p => p.GameName).ToArray()) + "!"));
       }
       StartLobby();
       return;
@@ -531,12 +531,12 @@ public class GameCoordinator : NetworkBehaviour {
 
     //Skip to next player who is ingame
     {
-      int currIndex = Player.all.IndexOf(drawingPlayer);
+      int currIndex = Player.All.IndexOf(DrawingPlayer);
       do {
-        currIndex = (currIndex + 1) % Player.all.Count;
-      } while (!Player.all[currIndex].isInGame);
+        currIndex = (currIndex + 1) % Player.All.Count;
+      } while (!Player.All[currIndex].IsInGame);
 
-      _drawingPlayerId = Player.all[currIndex].netId.Value;
+      _drawingPlayerId = Player.All[currIndex].netId.Value;
       RpcUpdateDrawingPlayer(_drawingPlayerId);
     }
 
@@ -548,17 +548,17 @@ public class GameCoordinator : NetworkBehaviour {
     Debug.Log("Starting new turn...");
 
     Assert.IsNull(_currentWordTransaction, "The current transaction should be null before we start a new one.");
-    _currentWordTransaction = _wordBankManager.bank.BeginWord(new BasicSelector());
-    _currentWordTransaction.SetPlayerCount(Player.inGame.Count());
+    _currentWordTransaction = _wordBankManager.Bank.BeginWord(new BasicSelector());
+    _currentWordTransaction.SetPlayerCount(Player.InGame.Count());
 
-    TargetUpdateCurrentWord(drawingPlayer.connectionToClient, currentWord);
+    TargetUpdateCurrentWord(DrawingPlayer.connectionToClient, CurrentWord);
 
-    foreach (var player in Player.all) {
-      player.hasGuessed = false;
-      player.timerHasReachedZero = false;
+    foreach (var player in Player.All) {
+      player.HasGuessed = false;
+      player.TimerHasReachedZero = false;
     }
 
-    drawingBoard.ClearAndReset();
+    DrawingBoard.ClearAndReset();
 
     _serverTimeLeft = _timePerTurn.value;
     RpcUpdateTimeLeft(_serverTimeLeft, forceUpdate: true);

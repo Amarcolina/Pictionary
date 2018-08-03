@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
+using UnityEngine.Serialization;
 
 public struct Message {
   public NetworkInstanceId netId;
@@ -25,9 +26,9 @@ public struct Message {
 
   public static Message User(string text) {
     return new Message() {
-      netId = Player.local.netId,
-      boardDisplayTime = GameCoordinator.instance.drawingBoard.boardDisplayTime,
-      timeLeft = GameCoordinator.instance.timeLeft,
+      netId = Player.Local.netId,
+      boardDisplayTime = GameCoordinator.instance.DrawingBoard.BoardDisplayTime,
+      timeLeft = GameCoordinator.instance.TimeLeft,
       text = text,
       color = new Color(0, 0, 0, 1),
       bold = false
@@ -38,20 +39,31 @@ public struct Message {
 public class MessageBoard : NetworkBehaviour {
   public const int MAX_MESSAGE_HISTORY = 128;
 
-  public Text textBox;
-  public InputField inputField;
-  public ScrollRect scrollRect;
-  public List<string> messageList;
+  [SerializeField]
+  [FormerlySerializedAs("textBox")]
+  private Text _textBox;
+
+  [SerializeField]
+  [FormerlySerializedAs("inputField")]
+  private InputField _inputField;
+
+  [SerializeField]
+  [FormerlySerializedAs("scrollRect")]
+  private ScrollRect _scrollRect;
+
+  [SerializeField]
+  [FormerlySerializedAs("messageList")]
+  private List<string> _messageList;
 
   private void Update() {
     string text = "";
-    foreach (var item in messageList) {
+    foreach (var item in _messageList) {
       if (text != "") {
         text += "\n";
       }
       text += item;
     }
-    textBox.text = text;
+    _textBox.text = text;
 
     if (Input.GetKey(KeyCode.F3)) {
       OnSubmitText(Random.Range(0, 1000).ToString().PadLeft(4, '0'));
@@ -59,13 +71,13 @@ public class MessageBoard : NetworkBehaviour {
   }
 
   public void OnSubmitText(string text) {
-    inputField.ActivateInputField();
+    _inputField.ActivateInputField();
     if (string.IsNullOrEmpty(text)) {
       return;
     }
     if (Input.GetKey(KeyCode.Return) || Input.GetKey(KeyCode.KeypadEnter) || Input.GetKey(KeyCode.F3)) {
-      Player.local.ExecuteClientMessage(Message.User(text));
-      inputField.text = "";
+      Player.Local.ExecuteClientMessage(Message.User(text));
+      _inputField.text = "";
     }
   }
 
@@ -84,7 +96,7 @@ public class MessageBoard : NetworkBehaviour {
     string text = msg.text;
 
     if (msg.netId != NetworkInstanceId.Invalid) {
-      text = Player.all.Single(p => p.netId == msg.netId).gameName + ": " + text;
+      text = Player.All.Single(p => p.netId == msg.netId).GameName + ": " + text;
     }
 
     msg.color.a = 255;
@@ -93,9 +105,9 @@ public class MessageBoard : NetworkBehaviour {
       text = "<b>" + text + "</b>";
     }
 
-    messageList.Add(text);
-    while (messageList.Count > MAX_MESSAGE_HISTORY) {
-      messageList.RemoveAt(0);
+    _messageList.Add(text);
+    while (_messageList.Count > MAX_MESSAGE_HISTORY) {
+      _messageList.RemoveAt(0);
     }
 
     StartCoroutine(updateAfterOneFrame());
@@ -104,6 +116,6 @@ public class MessageBoard : NetworkBehaviour {
   private IEnumerator updateAfterOneFrame() {
     yield return null;
     Canvas.ForceUpdateCanvases();
-    scrollRect.verticalNormalizedPosition = 0;
+    _scrollRect.verticalNormalizedPosition = 0;
   }
 }

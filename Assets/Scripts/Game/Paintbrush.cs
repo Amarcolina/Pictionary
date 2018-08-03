@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.Serialization;
 
 public struct BrushAction {
   public NetworkInstanceId drawerId;
@@ -111,39 +112,58 @@ public class Paintbrush : MonoBehaviour {
     FloodFill = 4
   }
 
-  public RectTransform board;
-  public int maxBrushSize = 5;
-  public float scrollSensitivity = 1;
-  public int eraseSize = 10;
+  [SerializeField]
+  [FormerlySerializedAs("board")]
+  private RectTransform _board;
+
+  [SerializeField]
+  [FormerlySerializedAs("maxBrushSize")]
+  private int _maxBrushSize = 5;
+
+  [SerializeField]
+  [FormerlySerializedAs("scrollSensitivity")]
+  private float _scrollSensitivity = 1;
+
+  [SerializeField]
+  [FormerlySerializedAs("eraseSize")]
+  private int _eraseSize = 10;
 
   [Header("Paintbrush State")]
-  public Tool tool = Tool.Freehand;
-  public float size = 0;
-  public Color color;
+  [SerializeField]
+  [FormerlySerializedAs("tool")]
+  private Tool _tool = Tool.Freehand;
 
-  private int intSize {
+  [SerializeField]
+  [FormerlySerializedAs("size")]
+  private float _size = 0;
+
+  [SerializeField]
+  [FormerlySerializedAs("color")]
+  private Color _color;
+
+  public int IntSize {
     get {
-      return Mathf.RoundToInt(size);
+      return Mathf.RoundToInt(_size);
     }
   }
 
-  private Vector2Int currCursor {
+  public Vector2Int CurrCursor {
     get {
-      Rect rect = rectTransformToScreenSpace(board);
+      Rect rect = rectTransformToScreenSpace(_board);
 
       float dx = inverseLerpUnclamped(rect.x, rect.x + rect.width, Input.mousePosition.x);
       float dy = inverseLerpUnclamped(rect.y, rect.y + rect.height, Input.mousePosition.y);
 
-      int cx = Mathf.RoundToInt(dx * board.rect.width);
-      int cy = Mathf.RoundToInt(dy * board.rect.height);
+      int cx = Mathf.RoundToInt(dx * _board.rect.width);
+      int cy = Mathf.RoundToInt(dy * _board.rect.height);
 
       return new Vector2Int(cx, cy);
     }
   }
 
   private bool isInsideCanvas(Vector2Int cursor) {
-    return cursor.x >= 0 && cursor.x < board.sizeDelta.x &&
-           cursor.y >= 0 && cursor.y < board.sizeDelta.y;
+    return cursor.x >= 0 && cursor.x < _board.sizeDelta.x &&
+           cursor.y >= 0 && cursor.y < _board.sizeDelta.y;
   }
 
   #region UPDATE LOGIC
@@ -152,25 +172,25 @@ public class Paintbrush : MonoBehaviour {
   }
 
   private void Update() {
-    if (isInsideCanvas(currCursor)) {
-      size = Mathf.Clamp(size - Input.mouseScrollDelta.y * scrollSensitivity, 0, maxBrushSize);
+    if (isInsideCanvas(CurrCursor)) {
+      _size = Mathf.Clamp(_size - Input.mouseScrollDelta.y * _scrollSensitivity, 0, _maxBrushSize);
     }
 
-    if (OnDraw != null && GameCoordinator.instance.CanPlayerDraw(Player.local)) {
+    if (OnDraw != null && GameCoordinator.instance.CanPlayerDraw(Player.Local)) {
       if (!Input.GetKey(KeyCode.Mouse0)) {
         OnDraw(new BrushAction() {
           type = BrushActionType.PreviewBox,
-          position0 = currCursor,
-          size = intSize,
-          color = color,
+          position0 = CurrCursor,
+          size = IntSize,
+          color = _color,
           isPreview = true
         });
       }
     }
 
-    if (!GameCoordinator.instance.CanPlayerDraw(Player.local)) {
-      GameCoordinator.instance.drawingBoard.PredictBrushAction(new BrushAction() {
-        drawerId = Player.local.netId,
+    if (!GameCoordinator.instance.CanPlayerDraw(Player.Local)) {
+      GameCoordinator.instance.DrawingBoard.PredictBrushAction(new BrushAction() {
+        drawerId = Player.Local.netId,
         type = BrushActionType.Box,
         position0 = new Vector2Int(-100, -100),
         position1 = new Vector2Int(-100, -100),
@@ -185,12 +205,12 @@ public class Paintbrush : MonoBehaviour {
     while (true) {
       yield return null;
 
-      if (!isInsideCanvas(currCursor)) {
+      if (!isInsideCanvas(CurrCursor)) {
         continue;
       }
 
       if (Input.GetKeyDown(KeyCode.Mouse0)) {
-        switch (tool) {
+        switch (_tool) {
           case Tool.Freehand:
             yield return StartCoroutine(freeformCoroutine());
             break;
@@ -203,14 +223,14 @@ public class Paintbrush : MonoBehaviour {
             if (OnDraw != null) {
               OnDraw(new BrushAction() {
                 type = BrushActionType.FloodFill,
-                position0 = currCursor,
-                color = color
+                position0 = CurrCursor,
+                color = _color
               });
             }
 
             break;
           default:
-            Debug.LogError("Should be no other tools, but had a tool of " + tool);
+            Debug.LogError("Should be no other tools, but had a tool of " + _tool);
             break;
         }
       } else if (Input.GetKeyDown(KeyCode.Mouse1)) {
@@ -221,63 +241,63 @@ public class Paintbrush : MonoBehaviour {
   }
 
   IEnumerator eraseCoroutine() {
-    Vector2Int prevCursor = currCursor;
+    Vector2Int prevCursor = CurrCursor;
 
     while (Input.GetKey(KeyCode.Mouse1)) {
       if (OnDraw != null) {
         OnDraw(new BrushAction() {
           type = BrushActionType.Line,
           position0 = prevCursor,
-          position1 = currCursor,
+          position1 = CurrCursor,
           color = new Color(1, 1, 1, 1),
-          size = eraseSize
+          size = _eraseSize
         });
 
         OnDraw(new BrushAction() {
           type = BrushActionType.Box,
-          position0 = currCursor - new Vector2Int(eraseSize, eraseSize),
-          position1 = currCursor + new Vector2Int(eraseSize, eraseSize),
+          position0 = CurrCursor - new Vector2Int(_eraseSize, _eraseSize),
+          position1 = CurrCursor + new Vector2Int(_eraseSize, _eraseSize),
           color = new Color(0, 0, 0, 1),
           size = 0,
           isPreview = true
         });
       }
 
-      prevCursor = currCursor;
+      prevCursor = CurrCursor;
       yield return null;
     }
   }
 
   IEnumerator freeformCoroutine() {
-    Vector2Int prevCursor = currCursor;
+    Vector2Int prevCursor = CurrCursor;
 
     while (Input.GetKey(KeyCode.Mouse0)) {
       if (OnDraw != null) {
         OnDraw(new BrushAction() {
           type = BrushActionType.Line,
           position0 = prevCursor,
-          position1 = currCursor,
-          color = color,
-          size = intSize
+          position1 = CurrCursor,
+          color = _color,
+          size = IntSize
         });
       }
 
-      prevCursor = currCursor;
+      prevCursor = CurrCursor;
       yield return null;
     }
   }
 
   IEnumerator shapeCoroutine() {
-    Vector2Int startCursor = currCursor;
+    Vector2Int startCursor = CurrCursor;
 
     while (Input.GetKey(KeyCode.Mouse0)) {
       if (OnDraw != null) {
         OnDraw(new BrushAction() {
-          type = (BrushActionType)tool,
+          type = (BrushActionType)_tool,
           position0 = startCursor,
-          position1 = currCursor,
-          color = color,
-          size = intSize,
+          position1 = CurrCursor,
+          color = _color,
+          size = IntSize,
           isPreview = true
         });
       }
@@ -287,17 +307,21 @@ public class Paintbrush : MonoBehaviour {
 
     if (OnDraw != null) {
       OnDraw(new BrushAction() {
-        type = (BrushActionType)tool,
+        type = (BrushActionType)_tool,
         position0 = startCursor,
-        position1 = currCursor,
-        color = color,
-        size = intSize
+        position1 = CurrCursor,
+        color = _color,
+        size = IntSize
       });
     }
   }
 
   public void SetTool(int newTool) {
-    tool = (Tool)newTool;
+    _tool = (Tool)newTool;
+  }
+
+  public void SetColor(Color color) {
+    _color = color;
   }
 
   public void Clear() {

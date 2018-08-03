@@ -60,7 +60,7 @@ public class DrawableCanvas : IDisposable {
   /// canvas.  It is always up to date with any draw commands
   /// that have been requested.
   /// </summary>
-  public Texture2D texture {
+  public Texture2D Texture {
     get {
       return _tex;
     }
@@ -69,7 +69,7 @@ public class DrawableCanvas : IDisposable {
   /// <summary>
   /// Returns the width of this canvas.
   /// </summary>
-  public int width {
+  public int Width {
     get {
       return _width;
     }
@@ -78,7 +78,7 @@ public class DrawableCanvas : IDisposable {
   /// <summary>
   /// Returns the height of this canvas.
   /// </summary>
-  public int height {
+  public int Height {
     get {
       return _height;
     }
@@ -88,7 +88,7 @@ public class DrawableCanvas : IDisposable {
   /// Returns whether or not the canvas is currently performing
   /// any background tasks that have yet to complete.
   /// </summary>
-  public bool isProcessing {
+  public bool IsProcessing {
     get {
       return _scanlineJob.HasValue;
     }

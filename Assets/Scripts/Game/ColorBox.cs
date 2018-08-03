@@ -1,14 +1,18 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.Serialization;
 
 public class ColorBox : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
   private const float SCROLL_SENSITIVITY = -0.03f;
 
-  public Paintbrush brush;
-  public bool canAdjustColor = true;
+  [SerializeField]
+  [FormerlySerializedAs("brush")]
+  private Paintbrush _brush;
+
+  [SerializeField]
+  [FormerlySerializedAs("canAdjustColor")]
+  private bool _canAdjustColor = true;
 
   private Image _image;
   private bool _isHovered;
@@ -29,7 +33,7 @@ public class ColorBox : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
   }
 
   private void Update() {
-    if (_isHovered && canAdjustColor) {
+    if (_isHovered && _canAdjustColor) {
       _center = Mathf.Clamp01(_center + Input.mouseScrollDelta.y * SCROLL_SENSITIVITY);
 
       if (_center > 0.5f) {
@@ -44,7 +48,7 @@ public class ColorBox : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
   }
 
   private void onClick() {
-    brush.color = _image.color;
+    _brush.SetColor(_image.color);
   }
 
   public void OnPointerEnter(PointerEventData eventData) {

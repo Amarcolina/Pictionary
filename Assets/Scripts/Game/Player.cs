@@ -3,33 +3,66 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.Serialization;
 using static RichTextUtility;
 
 public class Player : NetworkBehaviour {
   public const string NAME_PREF_KEY = "PlayerNamePreference";
 
-  public static Player local;
-  public static List<Player> all = new List<Player>();
-  public static IEnumerable<Player> inGame = all.Where(p => p.isInGame);
+  public static Player Local;
+  public static List<Player> All = new List<Player>();
+  public static IEnumerable<Player> InGame = All.Where(p => p._isInGame);
 
   public static Action OnPlayerChange;
 
-  public StringPref namePref;
+  [SerializeField]
+  [FormerlySerializedAs("namePref")]
+  private StringPref _namePref;
 
   [SyncVar]
-  public string gameName = "Unnamed";
+  [SerializeField]
+  [FormerlySerializedAs("gameName")]
+  private string _gameName = "Unnamed";
+  public string GameName {
+    get { return _gameName; }
+    set { _gameName = value; }
+  }
 
   [SyncVar]
-  public bool isInGame;
+  [SerializeField]
+  [FormerlySerializedAs("isInGame")]
+  private bool _isInGame;
+  public bool IsInGame {
+    get { return _isInGame; }
+    set { _isInGame = value; }
+  }
 
   [SyncVar]
-  public bool hasGuessed;
+  [SerializeField]
+  [FormerlySerializedAs("hasGuessed")]
+  private bool _hasGuessed;
+  public bool HasGuessed {
+    get { return _hasGuessed; }
+    set { _hasGuessed = value; }
+  }
 
   [SyncVar]
-  public int score = 0;
+  [SerializeField]
+  [FormerlySerializedAs("score")]
+  private int _score = 0;
+  public int Score {
+    get { return _score; }
+    set { _score = value; }
+  }
 
   [SyncVar]
-  public bool timerHasReachedZero;
+  [SerializeField]
+  [FormerlySerializedAs("timerHasReachedZero")]
+  private bool _timerHasReachedZero;
+  public bool TimerHasReachedZero {
+    get { return _timerHasReachedZero; }
+    set { _timerHasReachedZero = value; }
+  }
 
   [NonSerialized]
   public float guessTime;
@@ -37,7 +70,7 @@ public class Player : NetworkBehaviour {
   private float _prevTimeLeft = 100;
 
   private void Awake() {
-    all.Add(this);
+    All.Add(this);
 
     if (OnPlayerChange != null) {
       try {
@@ -50,17 +83,17 @@ public class Player : NetworkBehaviour {
 
   private void Start() {
     if (isLocalPlayer) {
-      local = this;
+      Local = this;
     }
 
-    CmdChangeName(namePref.value);
+    CmdChangeName(_namePref.value);
   }
 
   private void OnDestroy() {
-    all.Remove(this);
+    All.Remove(this);
 
-    if (local == this) {
-      local = null;
+    if (Local == this) {
+      Local = null;
     }
 
     if (OnPlayerChange != null) {
@@ -74,7 +107,7 @@ public class Player : NetworkBehaviour {
 
   private void Update() {
     if (isLocalPlayer) {
-      float timeLeft = GameCoordinator.instance.timeLeft;
+      float timeLeft = GameCoordinator.instance.TimeLeft;
 
       if (timeLeft <= 0 && _prevTimeLeft > 0) {
         CmdNotifyTimerReachedZero();
@@ -86,12 +119,12 @@ public class Player : NetworkBehaviour {
 
   [Command]
   private void CmdChangeName(string name) {
-    gameName = name;
+    _gameName = name;
   }
 
   [Command]
   private void CmdNotifyTimerReachedZero() {
-    timerHasReachedZero = true;
+    _timerHasReachedZero = true;
   }
 
   [Command]
@@ -119,7 +152,7 @@ public class Player : NetworkBehaviour {
   public void RpcUpdateNamePreference(string name) {
     name = name.Trim();
     name = name.Substring(0, Mathf.Min(64, name.Length));
-    namePref.value = name;
+    _namePref.value = name;
   }
 
   [Client]

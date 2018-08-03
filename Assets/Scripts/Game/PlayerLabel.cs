@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -24,17 +23,17 @@ public class PlayerLabel : MonoBehaviour {
   public Player player;
 
   private void Update() {
-    _nameLabel.text = player.gameName;
+    _nameLabel.text = player.GameName;
     Color color = _defaultColor;
 
-    switch (GameCoordinator.instance.gameState) {
+    switch (GameCoordinator.instance.CurrentState) {
       case GameCoordinator.GameState.Lobby:
         _scoreLabel.text = "";
         break;
       case GameCoordinator.GameState.ClassicGame:
-        if (player.isInGame) {
-          _scoreLabel.text = player.score.ToString();
-          if (GameCoordinator.instance.drawingPlayer == player) {
+        if (player.IsInGame) {
+          _scoreLabel.text = player.Score.ToString();
+          if (GameCoordinator.instance.DrawingPlayer == player) {
             color = _drawingColor;
           }
         } else {
