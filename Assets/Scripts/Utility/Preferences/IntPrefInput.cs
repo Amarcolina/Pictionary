@@ -16,7 +16,7 @@ public class IntPrefInput : MonoBehaviour {
   }
 
   private void OnEnable() {
-    _field.text = _preference.value.ToString();
+    _field.text = _preference.Value.ToString();
     _field.characterValidation = InputField.CharacterValidation.Integer;
     _field.onEndEdit.AddListener(onTextChange);
   }
@@ -28,10 +28,10 @@ public class IntPrefInput : MonoBehaviour {
   private void onTextChange(string text) {
     int value;
     if (!int.TryParse(text, out value)) {
-      _field.text = _preference.value.ToString();
+      _field.text = _preference.Value.ToString();
       return;
     }
 
-    _preference.value = value;
+    _preference.Value = value;
   }
 }

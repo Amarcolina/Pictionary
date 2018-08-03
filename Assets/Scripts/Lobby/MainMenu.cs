@@ -132,7 +132,7 @@ public class MainMenu : MonoBehaviour {
 
     switch (_menuState) {
       case MenuState.MatchMaker:
-        _netMatchName.text = _namePref.value + "'s Game";
+        _netMatchName.text = _namePref.Value + "'s Game";
         Manager.StartMatchMaker();
         OnSelectRefreshMatchList();
         break;

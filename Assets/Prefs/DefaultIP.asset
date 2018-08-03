@@ -11,5 +11,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1768f6d02db4e37469487c8aa909781c, type: 3}
   m_Name: DefaultIP
   m_EditorClassIdentifier: 
-  key: DefaultIP
-  defaultValue: 
+  _key: DefaultIP
+  _defaultValue: 

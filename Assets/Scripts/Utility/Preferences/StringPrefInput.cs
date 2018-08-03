@@ -16,7 +16,7 @@ public class StringPrefInput : MonoBehaviour {
   }
 
   private void OnEnable() {
-    _field.text = _preference.value.ToString();
+    _field.text = _preference.Value.ToString();
     _field.onEndEdit.AddListener(onTextChange);
   }
 
@@ -25,6 +25,6 @@ public class StringPrefInput : MonoBehaviour {
   }
 
   private void onTextChange(string text) {
-    _preference.value = text;
+    _preference.Value = text;
   }
 }

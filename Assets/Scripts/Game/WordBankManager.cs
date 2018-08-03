@@ -1,13 +1,15 @@
 ﻿using System;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [CreateAssetMenu(menuName = "Other/WordBankManager", order = 90000)]
 public class WordBankManager : ScriptableObject {
   private const string BANK_FILENAME = "WordBank.json";
 
   [SerializeField]
-  private TextAsset defaultWordList;
+  [FormerlySerializedAs("defaultWordList")]
+  private TextAsset _defaultWordList;
 
   [NonSerialized]
   private WordBank _activeWordBank;
@@ -25,7 +27,7 @@ public class WordBankManager : ScriptableObject {
   public WordBank Bank {
     get {
       if (_activeWordBank == null) {
-        var defaultWords = defaultWordList.text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+        var defaultWords = _defaultWordList.text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
         if (File.Exists(BankPath)) {
           try {

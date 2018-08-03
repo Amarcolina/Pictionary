@@ -1,22 +1,23 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.Serialization;
 
 [CreateAssetMenu(menuName = "Pref Object/Int", order = 900)]
 public class IntPref : ScriptableObject {
 
   [SerializeField]
-  private string key;
+  [FormerlySerializedAs("key")]
+  private string _key;
 
   [SerializeField]
-  private int defaultValue;
+  [FormerlySerializedAs("defaultValue")]
+  private int _defaultValue;
 
-  public int value {
+  public int Value {
     get {
-      return PlayerPrefs.GetInt(key, defaultValue);
+      return PlayerPrefs.GetInt(_key, _defaultValue);
     }
     set {
-      PlayerPrefs.SetInt(key, value);
+      PlayerPrefs.SetInt(_key, value);
     }
   }
 }

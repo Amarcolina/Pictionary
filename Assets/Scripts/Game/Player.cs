@@ -86,7 +86,7 @@ public class Player : NetworkBehaviour {
       Local = this;
     }
 
-    CmdChangeName(_namePref.value);
+    CmdChangeName(_namePref.Value);
   }
 
   private void OnDestroy() {
@@ -152,7 +152,7 @@ public class Player : NetworkBehaviour {
   public void RpcUpdateNamePreference(string name) {
     name = name.Trim();
     name = name.Substring(0, Mathf.Min(64, name.Length));
-    _namePref.value = name;
+    _namePref.Value = name;
   }
 
   [Client]

@@ -11,5 +11,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f282f293291854f449728f52adfc5389, type: 3}
   m_Name: TimePerTurn
   m_EditorClassIdentifier: 
-  key: TimePerTurn
-  defaultValue: 120
+  _key: TimePerTurn
+  _defaultValue: 120

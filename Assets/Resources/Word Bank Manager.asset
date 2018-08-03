@@ -11,4 +11,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b9283254d33e0148b3ae5db32474626, type: 3}
   m_Name: Word Bank Manager
   m_EditorClassIdentifier: 
-  defaultWordList: {fileID: 4900000, guid: a744774d2869d8d4b9f28cb750a29a67, type: 3}
+  _defaultWordList: {fileID: 4900000, guid: a744774d2869d8d4b9f28cb750a29a67, type: 3}

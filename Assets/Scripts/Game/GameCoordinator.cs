@@ -344,7 +344,7 @@ public class GameCoordinator : NetworkBehaviour {
     _drawingPlayerId = Player.All[Random.Range(0, Player.All.Count)].netId.Value;
     RpcUpdateDrawingPlayer(_drawingPlayerId);
 
-    _turnsLeft = _turnsPerGame.value;
+    _turnsLeft = _turnsPerGame.Value;
     while ((_turnsLeft % Player.All.Count) != 0) {
       _turnsLeft++;
     }
@@ -367,7 +367,7 @@ public class GameCoordinator : NetworkBehaviour {
       MessageBoard.RpcSubmitMessage(Message.Server(clickingPlayer.GameName + " has rejected the word " + CurrentWord + "."));
 
       //Then we record the rejection in the current word transaction, and complete the transaction
-      _currentWordTransaction.Reject(1.0f - _serverTimeLeft / _timePerTurn.value);
+      _currentWordTransaction.Reject(1.0f - _serverTimeLeft / _timePerTurn.Value);
       _currentWordTransaction.CompleteTransaction();
       _currentWordTransaction = null;
       _wordBankManager.SaveActiveWordBank();
@@ -437,7 +437,7 @@ public class GameCoordinator : NetworkBehaviour {
 
     //If the guess is correct
     if (WordUtility.DoesGuessMatch(message.text, CurrentWord)) {
-      _currentWordTransaction.NotifyGuess(1 - message.timeLeft / _timePerTurn.value);
+      _currentWordTransaction.NotifyGuess(1 - message.timeLeft / _timePerTurn.Value);
 
       //Send the message only to the player who guessed
       MessageBoard.TargetSubmitMessage(player.connectionToClient, message);
@@ -457,7 +457,7 @@ public class GameCoordinator : NetworkBehaviour {
       //If this is the first person to guess
       //Set the time to be 15 seconds remaining!
       if (Player.All.Count(p => p.HasGuessed) == 1) {
-        _serverTimeLeft = _endOfGameDelay.value;
+        _serverTimeLeft = _endOfGameDelay.Value;
         RpcUpdateTimeLeft(_serverTimeLeft, forceUpdate: true);
         return;
       }
@@ -560,7 +560,7 @@ public class GameCoordinator : NetworkBehaviour {
 
     DrawingBoard.ClearAndReset();
 
-    _serverTimeLeft = _timePerTurn.value;
+    _serverTimeLeft = _timePerTurn.Value;
     RpcUpdateTimeLeft(_serverTimeLeft, forceUpdate: true);
   }
 
