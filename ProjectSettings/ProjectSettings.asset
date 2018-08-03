@@ -628,7 +628,7 @@ PlayerSettings:
   cloudServicesEnabled:
     UNet: 1
   facebookSdkVersion: 7.9.4
-  apiCompatibilityLevel: 2
+  apiCompatibilityLevel: 3
   cloudProjectId: 977fddee-b922-4b5a-bd22-a9150cf69b09
   projectName: Pictionary
   organizationId: amarcolina
