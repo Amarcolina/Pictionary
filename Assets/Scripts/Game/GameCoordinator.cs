@@ -239,7 +239,7 @@ public class GameCoordinator : NetworkBehaviour {
       }
 
       player.GameName = newName;
-      player.RpcUpdateNamePreference(newName);
+      player.TargetUpdateNamePreference(player.connectionToClient, newName);
       MessageBoard.RpcSubmitMessage(Message.Server(prevName + " changed their name to " + newName));
       return true;
     }

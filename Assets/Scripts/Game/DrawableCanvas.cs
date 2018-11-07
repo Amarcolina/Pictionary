@@ -15,7 +15,7 @@ public class DrawableCanvas : IDisposable {
 #if UNITY_EDITOR
     false;
 #else
-    true;
+    false;
 #endif
 
   private Texture2D _tex;

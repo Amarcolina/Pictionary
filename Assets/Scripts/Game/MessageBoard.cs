@@ -37,7 +37,7 @@ public struct Message {
 }
 
 public class MessageBoard : NetworkBehaviour {
-  public const int MAX_MESSAGE_HISTORY = 128;
+  public const int MAX_MESSAGE_HISTORY = 48;
 
   [SerializeField]
   [FormerlySerializedAs("textBox")]

@@ -148,10 +148,10 @@ public class Player : NetworkBehaviour {
     GameCoordinator.instance.SubmitBrush(this, brush);
   }
 
-  [ClientRpc]
-  public void RpcUpdateNamePreference(string name) {
+  [TargetRpc]
+  public void TargetUpdateNamePreference(NetworkConnection conn, string name) {
     name = name.Trim();
-    name = name.Substring(0, Mathf.Min(64, name.Length));
+    name = name.Substring(0, Mathf.Min(24, name.Length));
     _namePref.Value = name;
   }
 
