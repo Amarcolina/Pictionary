@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Networking;
+using Unity.Netcode;
 using UnityEngine.Serialization;
 
 public struct BrushAction {

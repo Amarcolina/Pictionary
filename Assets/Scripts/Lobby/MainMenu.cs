@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Networking;
-using UnityEngine.Networking.Match;
+using Unity.Netcode;
 using UnityEngine.Serialization;
 
 public class MainMenu : MonoBehaviour {

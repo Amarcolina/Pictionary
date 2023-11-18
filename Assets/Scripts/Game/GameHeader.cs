@@ -134,9 +134,9 @@ public class GameHeader : MonoBehaviour {
 
   public void OnClickPauseUnpauseButton() {
     if (GameCoordinator.instance.IsGamePaused) {
-      Player.Local.CmdUnpauseGame();
+      Player.Local.UnpauseGameRpc();
     } else {
-      Player.Local.CmdPauseGame();
+      Player.Local.PauseGameRpc();
     }
   }
 

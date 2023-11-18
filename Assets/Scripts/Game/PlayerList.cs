@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
+using Unity.Netcode;
 using UnityEngine.Serialization;
 
 public class PlayerList : NetworkBehaviour {
@@ -24,7 +24,6 @@ public class PlayerList : NetworkBehaviour {
     Player.OnPlayerChange -= updatePlayerList;
   }
 
-  [Client]
   private void updatePlayerList() {
     foreach (var spawned in _spawned) {
       if (spawned != null) {

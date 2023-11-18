@@ -2,194 +2,160 @@
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
+using Unity.Netcode;
 using UnityEngine.Serialization;
 using static RichTextUtility;
 
 public class Player : NetworkBehaviour {
-  public const string NAME_PREF_KEY = "PlayerNamePreference";
+    public const string NAME_PREF_KEY = "PlayerNamePreference";
 
-  public static Player Local;
-  public static List<Player> All = new List<Player>();
-  public static IEnumerable<Player> InGame = All.Where(p => p._isInGame);
+    public static Player Local;
+    public static List<Player> All = new List<Player>();
+    public static IEnumerable<Player> InGame = All.Where(p => p._isInGame);
 
-  public static Action OnPlayerChange;
+    public static Action OnPlayerChange;
 
-  [SerializeField]
-  [FormerlySerializedAs("namePref")]
-  private StringPref _namePref;
+    [SerializeField]
+    [FormerlySerializedAs("namePref")]
+    private StringPref _namePref;
 
-  [SyncVar]
-  [SerializeField]
-  [FormerlySerializedAs("gameName")]
-  private string _gameName = "Unnamed";
-  public string GameName {
-    get { return _gameName; }
-    set { _gameName = value; }
-  }
+    public NetworkVariable<string> GameName;
+    public NetworkVariable<bool> IsInGame;
+    public NetworkVariable<bool> HasGuessed;
+    public NetworkVariable<int> Score;
+    public NetworkVariable<bool> TimerHasReachedZero;
 
-  [SyncVar]
-  [SerializeField]
-  [FormerlySerializedAs("isInGame")]
-  private bool _isInGame;
-  public bool IsInGame {
-    get { return _isInGame; }
-    set { _isInGame = value; }
-  }
+    [NonSerialized]
+    public float guessTime;
 
-  [SyncVar]
-  [SerializeField]
-  [FormerlySerializedAs("hasGuessed")]
-  private bool _hasGuessed;
-  public bool HasGuessed {
-    get { return _hasGuessed; }
-    set { _hasGuessed = value; }
-  }
+    private float _prevTimeLeft = 100;
 
-  [SyncVar]
-  [SerializeField]
-  [FormerlySerializedAs("score")]
-  private int _score = 0;
-  public int Score {
-    get { return _score; }
-    set { _score = value; }
-  }
+    private void Awake() {
+        All.Add(this);
 
-  [SyncVar]
-  [SerializeField]
-  [FormerlySerializedAs("timerHasReachedZero")]
-  private bool _timerHasReachedZero;
-  public bool TimerHasReachedZero {
-    get { return _timerHasReachedZero; }
-    set { _timerHasReachedZero = value; }
-  }
-
-  [NonSerialized]
-  public float guessTime;
-
-  private float _prevTimeLeft = 100;
-
-  private void Awake() {
-    All.Add(this);
-
-    if (OnPlayerChange != null) {
-      try {
-        OnPlayerChange();
-      } catch (Exception e) {
-        Debug.LogException(e);
-      }
-    }
-  }
-
-  private void Start() {
-    if (isLocalPlayer) {
-      Local = this;
+        if (OnPlayerChange != null) {
+            try {
+                OnPlayerChange();
+            } catch (Exception e) {
+                Debug.LogException(e);
+            }
+        }
     }
 
-    CmdChangeName(_namePref.Value);
-  }
+    public override void OnNetworkSpawn() {
+        base.OnNetworkSpawn();
 
-  private void OnDestroy() {
-    All.Remove(this);
+        if (IsLocalPlayer) {
+            Local = this;
+        }
 
-    if (Local == this) {
-      Local = null;
+        ChangeNameRpc(_namePref.Value);
     }
 
-    if (OnPlayerChange != null) {
-      try {
-        OnPlayerChange();
-      } catch (Exception e) {
-        Debug.LogException(e);
-      }
-    }
-  }
+    public override void OnNetworkDespawn() {
+        base.OnNetworkDespawn();
 
-  private void Update() {
-    if (isLocalPlayer) {
-      float timeLeft = GameCoordinator.instance.TimeLeft;
+        All.Remove(this);
 
-      if (timeLeft <= 0 && _prevTimeLeft > 0) {
-        CmdNotifyTimerReachedZero();
-      }
+        if (Local == this) {
+            Local = null;
+        }
 
-      _prevTimeLeft = timeLeft;
-    }
-  }
-
-  [Command]
-  private void CmdChangeName(string name) {
-    _gameName = name;
-  }
-
-  [Command]
-  private void CmdNotifyTimerReachedZero() {
-    _timerHasReachedZero = true;
-  }
-
-  [Command]
-  public void CmdRejectWord(NetworkInstanceId clickerId) {
-    GameCoordinator.instance.RejectCurrentWord(clickerId);
-  }
-
-  [Command]
-  public void CmdPauseGame() {
-    GameCoordinator.instance.SubmitPauseGame();
-  }
-
-  [Command]
-  public void CmdUnpauseGame() {
-    GameCoordinator.instance.SubmitResumeGame();
-  }
-
-
-  [Command]
-  public void CmdDraw(BrushAction brush) {
-    GameCoordinator.instance.SubmitBrush(this, brush);
-  }
-
-  [TargetRpc]
-  public void TargetUpdateNamePreference(NetworkConnection conn, string name) {
-    name = name.Trim();
-    name = name.Substring(0, Mathf.Min(24, name.Length));
-    _namePref.Value = name;
-  }
-
-  [Client]
-  public void ExecuteClientMessage(Message message) {
-    if (tryParseLocalMessage(message)) {
-      return;
+        if (OnPlayerChange != null) {
+            try {
+                OnPlayerChange();
+            } catch (Exception e) {
+                Debug.LogException(e);
+            }
+        }
     }
 
-    //Else if we couldn't process the message, send it to the server
-    CmdAddMessage(message);
-  }
+    private void Update() {
+        if (IsLocalPlayer) {
+            float timeLeft = GameCoordinator.instance.TimeLeft;
 
+            if (timeLeft <= 0 && _prevTimeLeft > 0) {
+                NotifyTimerReachedZeroRpc();
+            }
 
-  [Command]
-  private void CmdAddMessage(Message msg) {
-    GameCoordinator.instance.SubmitMessage(this, msg);
-  }
-
-  private bool tryParseLocalMessage(Message message) {
-    string[] tokens = message.text.Split().Where(t => t.Length > 0).ToArray();
-    tokens[0] = tokens[0].ToLower();
-
-    if (tokens[0] == "/quit") {
-      NetworkManager.singleton.StopHost();
-      return true;
+            _prevTimeLeft = timeLeft;
+        }
     }
 
-    if (tokens[0] == "/info") {
-      CmdAddMessage(Message.User("\n" +
-                                 B("Persistent Data Path:\n") +
-                                 Application.persistentDataPath + "\n" +
-                                 B("Word Bank Path:\n") +
-                                 WordBankManager.BankPath));
-      return true;
+    [ServerRpc]
+    private void ChangeNameRpc(string name) {
+        GameName.Value = name;
     }
 
-    return false;
-  }
+    [ServerRpc]
+    private void NotifyTimerReachedZeroRpc() {
+        TimerHasReachedZero.Value = true;
+    }
+
+    [ServerRpc]
+    public void RejectWordRpc(ulong clickerId) {
+        GameCoordinator.instance.RejectCurrentWord(clickerId);
+    }
+
+    [ServerRpc]
+    public void PauseGameRpc() {
+        GameCoordinator.instance.SubmitPauseGame();
+    }
+
+    [ServerRpc]
+    public void UnpauseGameRpc() {
+        GameCoordinator.instance.SubmitResumeGame();
+    }
+
+    [ServerRpc]
+    public void DrawRpc(BrushAction brush) {
+        GameCoordinator.instance.SubmitBrush(this, brush);
+    }
+
+    [ServerRpc]
+    private void AddMessageRpc(Message msg) {
+        GameCoordinator.instance.SubmitMessage(this, msg);
+    }
+
+
+
+
+    [ClientRpc]
+    public void UpdateNamePreferenceRpc(string name, ClientRpcParams clientRpcParams = default) {
+        name = name.Trim();
+        name = name.Substring(0, Mathf.Min(24, name.Length));
+        _namePref.Value = name;
+    }
+
+    [ClientRpc]
+    public void ExecuteClientMessageRpc(Message message, ClientRpcParams clientRpcParams = default) {
+        if (tryParseLocalMessage(message)) {
+            return;
+        }
+
+        //Else if we couldn't process the message, send it to the server
+        AddMessageRpc(message);
+    }
+
+    private bool tryParseLocalMessage(Message message) {
+        string[] tokens = message.text.Split().Where(t => t.Length > 0).ToArray();
+        tokens[0] = tokens[0].ToLower();
+
+        if (tokens[0] == "/quit") {
+            NetworkManager.Singleton.Shutdown();
+            return true;
+        }
+
+        if (tokens[0] == "/info") {
+            AddMessageRpc(Message.User("\n" +
+                                       B("Persistent Data Path:\n") +
+                                       Application.persistentDataPath + "\n" +
+                                       B("Word Bank Path:\n") +
+                                       WordBankManager.BankPath));
+            return true;
+        }
+
+        return false;
+    }
 
 }
