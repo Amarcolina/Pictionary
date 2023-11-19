@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.Serialization;
+using Unity.Collections;
 using static RichTextUtility;
 
 public class Player : NetworkBehaviour {
@@ -19,7 +20,7 @@ public class Player : NetworkBehaviour {
     [FormerlySerializedAs("namePref")]
     private StringPref _namePref;
 
-    public NetworkVariable<string> GameName;
+    public NetworkVariable<FixedString64Bytes> GameName;
     public NetworkVariable<bool> IsInGame;
     public NetworkVariable<bool> HasGuessed;
     public NetworkVariable<int> Score;

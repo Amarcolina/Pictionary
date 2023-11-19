@@ -23,7 +23,7 @@ public class PlayerLabel : MonoBehaviour {
   public Player player;
 
   private void Update() {
-    _nameLabel.text = player.GameName.Value;
+    _nameLabel.text = player.GameName.Value.Value;
     Color color = _defaultColor;
 
     switch (GameCoordinator.instance.CurrentState.Value) {

@@ -221,7 +221,7 @@ public class GameCoordinator : NetworkBehaviour {
         tokens[0] = tokens[0].ToLower();
 
         if (tokens[0] == "/name") {
-            string prevName = player.GameName.Value;
+            string prevName = player.GameName.Value.Value;
             string newName = string.Join(" ", tokens.Skip(1).ToArray()).Trim();
 
             if (newName.Length == 0) {

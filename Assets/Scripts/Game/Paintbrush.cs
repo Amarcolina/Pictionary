@@ -135,7 +135,7 @@ public struct BrushAction : INetworkSerializable {
         }
     }
 
-    
+
 }
 
 public enum BrushActionType {
@@ -219,6 +219,10 @@ public class Paintbrush : MonoBehaviour {
     }
 
     private void Update() {
+        if (!NetworkManager.Singleton.IsClient) {
+            return;
+        }
+
         if (isInsideCanvas(CurrCursor)) {
             _size = Mathf.Clamp(_size - Input.mouseScrollDelta.y * _scrollSensitivity, 0, _maxBrushSize);
         }
@@ -250,6 +254,10 @@ public class Paintbrush : MonoBehaviour {
 
     IEnumerator controlCoroutine() {
         while (true) {
+            while (!NetworkManager.Singleton.IsClient) {
+                yield return null;
+            }
+
             yield return null;
 
             if (!isInsideCanvas(CurrCursor)) {

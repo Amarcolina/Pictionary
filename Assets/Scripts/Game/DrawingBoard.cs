@@ -155,6 +155,10 @@ public class DrawingBoard : NetworkBehaviour {
     }
 
     private void Update() {
+        if (Player.Local == null) {
+            return;
+        }
+
         while (_toDrawQueue.Count > 0) {
             var action = _toDrawQueue.Peek();
 

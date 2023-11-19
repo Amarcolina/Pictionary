@@ -1,25 +1,15 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &100100000
-Prefab:
-  m_ObjectHideFlags: 1
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications: []
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 0}
-  m_RootGameObject: {fileID: 1347240107288094}
-  m_IsPrefabAsset: 1
 --- !u!1 &1347240107288094
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4921284451728056}
-  - component: {fileID: 114048885218101550}
+  - component: {fileID: 6425049418101094567}
   - component: {fileID: 114218917434109004}
   m_Layer: 0
   m_Name: Player
@@ -30,54 +20,45 @@ GameObject:
   m_IsActive: 1
 --- !u!4 &4921284451728056
 Transform:
-  m_ObjectHideFlags: 1
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1347240107288094}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -116.04095, y: 160.06633, z: -7.8701973}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &114048885218101550
+--- !u!114 &6425049418101094567
 MonoBehaviour:
-  m_ObjectHideFlags: 1
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1347240107288094}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 372142912, guid: dc443db3e92b4983b9738c1131f555cb, type: 3}
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_SceneId:
-    m_Value: 0
-  m_AssetId:
-    i0: 30
-    i1: 2
-    i2: 230
-    i3: 211
-    i4: 249
-    i5: 219
-    i6: 252
-    i7: 84
-    i8: 88
-    i9: 82
-    i10: 198
-    i11: 159
-    i12: 35
-    i13: 127
-    i14: 60
-    i15: 67
-  m_ServerOnly: 0
-  m_LocalPlayerAuthority: 0
+  GlobalObjectIdHash: 0
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
 --- !u!114 &114218917434109004
 MonoBehaviour:
-  m_ObjectHideFlags: 1
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1347240107288094}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -85,8 +66,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _namePref: {fileID: 11400000, guid: 0a7cf90c5ba79fe4899de4cd913a122b, type: 2}
-  _gameName: Unnamed
-  _isInGame: 0
-  _hasGuessed: 0
-  _score: 0
-  _timerHasReachedZero: 0
+  GameName:
+    m_InternalValue: 
+  IsInGame:
+    m_InternalValue: 0
+  HasGuessed:
+    m_InternalValue: 0
+  Score:
+    m_InternalValue: 0
+  TimerHasReachedZero:
+    m_InternalValue: 0
