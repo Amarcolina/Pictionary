@@ -6,7 +6,7 @@ using UnityEngine.UI;
 using Unity.Netcode;
 using UnityEngine.Serialization;
 
-public struct Message {
+public struct Message : INetworkSerializable {
     public ulong netId;
     public float boardDisplayTime;
     public float timeLeft;
@@ -33,6 +33,15 @@ public struct Message {
             color = new Color(0, 0, 0, 1),
             bold = false
         };
+    }
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter {
+        serializer.SerializeValue(ref netId);
+        serializer.SerializeValue(ref boardDisplayTime);
+        serializer.SerializeValue(ref timeLeft);
+        serializer.SerializeValue(ref text);
+        serializer.SerializeValue(ref color);
+        serializer.SerializeValue(ref bold);
     }
 }
 
@@ -76,13 +85,13 @@ public class MessageBoard : NetworkBehaviour {
             return;
         }
         if (Input.GetKey(KeyCode.Return) || Input.GetKey(KeyCode.KeypadEnter) || Input.GetKey(KeyCode.F3)) {
-            Player.Local.ExecuteClientMessageRpc(Message.User(text));
+            Player.Local.ExecuteClientMessageClientRpc(Message.User(text));
             _inputField.text = "";
         }
     }
 
     [ClientRpc]
-    public void SubmitMessageRpc(Message msg, ClientRpcParams clientRpcParams = default) {
+    public void SubmitMessageClientRpc(Message msg, ClientRpcParams clientRpcParams = default) {
         LocalSubmitMessage(msg);
     }
 

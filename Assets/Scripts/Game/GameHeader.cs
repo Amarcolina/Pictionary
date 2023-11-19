@@ -59,7 +59,7 @@ public class GameHeader : MonoBehaviour {
 
   void Update() {
     //Show or hide controls
-    switch (GameCoordinator.instance.CurrentState) {
+    switch (GameCoordinator.instance.CurrentState.Value) {
       case GameCoordinator.GameState.Lobby:
         _group.alpha = 0;
         break;
@@ -68,7 +68,7 @@ public class GameHeader : MonoBehaviour {
         break;
     }
 
-    if (GameCoordinator.instance.IsGamePaused) {
+    if (GameCoordinator.instance.IsGamePaused.Value) {
       _pauseImage.sprite = _resumeSprite;
     } else {
       _pauseImage.sprite = _pauseSprite;
@@ -83,13 +83,13 @@ public class GameHeader : MonoBehaviour {
     {
       Color color = _defaultBackgroundColor;
 
-      switch (GameCoordinator.instance.CurrentState) {
+      switch (GameCoordinator.instance.CurrentState.Value) {
         case GameCoordinator.GameState.ClassicGame:
           if (GameCoordinator.instance.DrawingPlayer == Player.Local) {
             color = _drawColor;
           }
 
-          if (Player.All.Any(p => p.HasGuessed)) {
+          if (Player.All.Any(p => p.HasGuessed.Value)) {
             if (GameCoordinator.instance.DrawingBoard == Player.Local) {
               color = _youGuessedColor;
             } else {
@@ -97,7 +97,7 @@ public class GameHeader : MonoBehaviour {
             }
           }
 
-          if (Player.Local.HasGuessed) {
+          if (Player.Local.HasGuessed.Value) {
             color = _youGuessedColor;
           }
           break;
@@ -107,7 +107,7 @@ public class GameHeader : MonoBehaviour {
     }
 
     //Set the main word label
-    switch (GameCoordinator.instance.CurrentState) {
+    switch (GameCoordinator.instance.CurrentState.Value) {
       case GameCoordinator.GameState.Lobby:
         _wordLabel.text = "";
         break;
@@ -122,7 +122,7 @@ public class GameHeader : MonoBehaviour {
     }
 
     //Set the turns left label
-    switch (GameCoordinator.instance.CurrentState) {
+    switch (GameCoordinator.instance.CurrentState.Value) {
       case GameCoordinator.GameState.Lobby:
         _turnsLeftLabel.text = "";
         break;
@@ -133,14 +133,14 @@ public class GameHeader : MonoBehaviour {
   }
 
   public void OnClickPauseUnpauseButton() {
-    if (GameCoordinator.instance.IsGamePaused) {
-      Player.Local.UnpauseGameRpc();
+    if (GameCoordinator.instance.IsGamePaused.Value) {
+      Player.Local.UnpauseGameServerRpc();
     } else {
-      Player.Local.PauseGameRpc();
+      Player.Local.PauseGameServerRpc();
     }
   }
 
   public void OnClickRejectWord() {
-    Player.Local.CmdRejectWord(Player.Local.netId);
+    Player.Local.RejectWordServerRpc(Player.Local.NetworkObjectId);
   }
 }

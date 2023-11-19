@@ -23,15 +23,15 @@ public class PlayerLabel : MonoBehaviour {
   public Player player;
 
   private void Update() {
-    _nameLabel.text = player.GameName;
+    _nameLabel.text = player.GameName.Value;
     Color color = _defaultColor;
 
-    switch (GameCoordinator.instance.CurrentState) {
+    switch (GameCoordinator.instance.CurrentState.Value) {
       case GameCoordinator.GameState.Lobby:
         _scoreLabel.text = "";
         break;
       case GameCoordinator.GameState.ClassicGame:
-        if (player.IsInGame) {
+        if (player.IsInGame.Value) {
           _scoreLabel.text = player.Score.ToString();
           if (GameCoordinator.instance.DrawingPlayer == player) {
             color = _drawingColor;

@@ -193,7 +193,7 @@ public class GameCoordinator : NetworkBehaviour {
 
         if (CanPlayerDraw(Player.Local)) {
             _drawingBoard.PredictBrushAction(brush);
-            Player.Local.DrawRpc(brush);
+            Player.Local.DrawServerRpc(brush);
         }
     }
 
@@ -201,18 +201,18 @@ public class GameCoordinator : NetworkBehaviour {
         var wait1Second = new WaitForSeconds(1);
         while (true) {
             yield return wait1Second;
-            RpcUpdateGameTime(Time.realtimeSinceStartup, forceUpdate: false);
-            RpcUpdateTimeLeft(_serverTimeLeft, forceUpdate: false);
+            RpcUpdateGameTimeClientRpc(Time.realtimeSinceStartup, forceUpdate: false);
+            RpcUpdateTimeLeftClientRpc(_serverTimeLeft, forceUpdate: false);
         }
     }
 
     [ClientRpc]
-    private void RpcUpdateGameTime(float time, bool forceUpdate) {
+    private void RpcUpdateGameTimeClientRpc(float time, bool forceUpdate) {
         GameTime.Update(time, forceUpdate);
     }
 
     [ClientRpc]
-    private void RpcUpdateTimeLeft(float time, bool forceUpdate) {
+    private void RpcUpdateTimeLeftClientRpc(float time, bool forceUpdate) {
         TimeLeft.Update(time, forceUpdate);
     }
 
@@ -225,20 +225,20 @@ public class GameCoordinator : NetworkBehaviour {
             string newName = string.Join(" ", tokens.Skip(1).ToArray()).Trim();
 
             if (newName.Length == 0) {
-                MessageBoard.SubmitMessageRpc(Message.Server("Cannot change your name to nothing."), RpcSend.To(player));
+                MessageBoard.SubmitMessageClientRpc(Message.Server("Cannot change your name to nothing."), RpcSend.To(player));
                 return true;
             }
 
             player.GameName.Value = newName;
 
-            player.UpdateNamePreferenceRpc(newName, RpcSend.To(player));
+            player.UpdateNamePreferenceClientRpc(newName, RpcSend.To(player));
 
-            MessageBoard.SubmitMessageRpc(Message.Server(prevName + " changed their name to " + newName));
+            MessageBoard.SubmitMessageClientRpc(Message.Server(prevName + " changed their name to " + newName));
             return true;
         }
 
         if (tokens[0] == "/help") {
-            MessageBoard.SubmitMessageRpc(new Message() {
+            MessageBoard.SubmitMessageClientRpc(new Message() {
                 netId = 1231231,
                 boardDisplayTime = 0,
                 color = new Color32(0, 0, 0, 0),
@@ -283,7 +283,7 @@ public class GameCoordinator : NetworkBehaviour {
         }
 
         //All players can message in the lobby
-        MessageBoard.SubmitMessageRpc(message);
+        MessageBoard.SubmitMessageClientRpc(message);
     }
 
     private void lobbySubmitPauseGame() { }
@@ -303,7 +303,7 @@ public class GameCoordinator : NetworkBehaviour {
             if (player.IsServer) {
                 StartClassicGame();
             } else {
-                MessageBoard.SubmitMessageRpc(Message.Server("Only the server can start a game."), RpcSend.To(player));
+                MessageBoard.SubmitMessageClientRpc(Message.Server("Only the server can start a game."), RpcSend.To(player));
             }
             return true;
         }
@@ -330,7 +330,7 @@ public class GameCoordinator : NetworkBehaviour {
         }
 
         _drawingPlayerId = Player.All[Random.Range(0, Player.All.Count)].NetworkObjectId;
-        UpdateDrawingPlayerRpc(_drawingPlayerId);
+        UpdateDrawingPlayerClientRpc(_drawingPlayerId);
 
         TurnsLeft.Value = _turnsPerGame.Value;
         while ((TurnsLeft.Value % Player.All.Count) != 0) {
@@ -351,7 +351,7 @@ public class GameCoordinator : NetworkBehaviour {
         //And as long as nobody has guessed yet
         if (clickingPlayer == DrawingPlayer && Player.All.All(p => !p.HasGuessed.Value)) {
             //First we let everybody know the word has been rejected, and what the word was
-            MessageBoard.SubmitMessageRpc(Message.Server(clickingPlayer.GameName + " has rejected the word " + CurrentWord + "."));
+            MessageBoard.SubmitMessageClientRpc(Message.Server(clickingPlayer.GameName + " has rejected the word " + CurrentWord + "."));
 
             //Then we record the rejection in the current word transaction, and complete the transaction
             _currentWordTransaction.Reject(1.0f - _serverTimeLeft / _timePerTurn.Value);
@@ -401,10 +401,10 @@ public class GameCoordinator : NetworkBehaviour {
         //Allow the server to stop the game if they want to
         if (message.text == "/stop") {
             if (player.IsServer) {
-                MessageBoard.SubmitMessageRpc(Message.Server("The server stopped the game."));
+                MessageBoard.SubmitMessageClientRpc(Message.Server("The server stopped the game."));
                 StartLobby();
             } else {
-                MessageBoard.SubmitMessageRpc(Message.Server("Only the server can stop an in-progress game."), RpcSend.To(player));
+                MessageBoard.SubmitMessageClientRpc(Message.Server("Only the server can stop an in-progress game."), RpcSend.To(player));
             }
             return;
         }
@@ -424,10 +424,10 @@ public class GameCoordinator : NetworkBehaviour {
             _currentWordTransaction.NotifyGuess(1 - message.timeLeft / _timePerTurn.Value);
 
             //Send the message only to the player who guessed
-            MessageBoard.SubmitMessageRpc(message, RpcSend.To(player));
+            MessageBoard.SubmitMessageClientRpc(message, RpcSend.To(player));
 
             //Don't submit the actual message to the rest, just tell everyone that they have guessed correctly
-            MessageBoard.SubmitMessageRpc(Message.Server(player.GameName + " has guessed!"));
+            MessageBoard.SubmitMessageClientRpc(Message.Server(player.GameName + " has guessed!"));
 
             player.guessTime = message.boardDisplayTime;
             player.HasGuessed.Value = true;
@@ -442,7 +442,7 @@ public class GameCoordinator : NetworkBehaviour {
             //Set the time to be 15 seconds remaining!
             if (Player.All.Count(p => p.HasGuessed.Value) == 1) {
                 _serverTimeLeft = _endOfGameDelay.Value;
-                RpcUpdateTimeLeft(_serverTimeLeft, forceUpdate: true);
+                RpcUpdateTimeLeftClientRpc(_serverTimeLeft, forceUpdate: true);
                 return;
             }
 
@@ -451,12 +451,12 @@ public class GameCoordinator : NetworkBehaviour {
 
         //If the guess is close it is not broadcast to the rest of the players
         if (WordUtility.IsGuessClose(message.text, CurrentWord)) {
-            MessageBoard.SubmitMessageRpc(message, RpcSend.To(player));
-            MessageBoard.SubmitMessageRpc(Message.Server("Your guess is close"), RpcSend.To(player));
+            MessageBoard.SubmitMessageClientRpc(message, RpcSend.To(player));
+            MessageBoard.SubmitMessageClientRpc(Message.Server("Your guess is close"), RpcSend.To(player));
             return;
         }
 
-        MessageBoard.SubmitMessageRpc(message);
+        MessageBoard.SubmitMessageClientRpc(message);
     }
 
     private bool classicCanPlayerDraw(Player player) {
@@ -468,7 +468,7 @@ public class GameCoordinator : NetworkBehaviour {
         Debug.Log("Finishing turn...");
 
         Assert.IsNotNull(_currentWordTransaction, "We should always be undergoing a word transaction before finishing a turn.");
-        MessageBoard.SubmitMessageRpc(Message.Server("The word was " + CurrentWord));
+        MessageBoard.SubmitMessageClientRpc(Message.Server("The word was " + CurrentWord));
 
         _currentWordTransaction.CompleteTransaction();
         _currentWordTransaction = null;
@@ -477,14 +477,14 @@ public class GameCoordinator : NetworkBehaviour {
         if (Player.All.Any(p => p.HasGuessed.Value)) {
             //Drawing player gets 9 points as long as someone has guessed
             //Plus 1 point for every player who guessed (which is at least 1)
-            DrawingPlayer.Score += 9 + Player.All.Count(p => p.HasGuessed);
+            DrawingPlayer.Score.Value += 9 + Player.All.Count(p => p.HasGuessed.Value);
 
             //All other players get points based on the order they guessed
             //First to guess gets 10, next gets 9, and so on
             //A player that guesses always gets at least 1 point
             int points = 10;
             foreach (var player in Player.All.Where(p => p.HasGuessed.Value).OrderBy(p => p.guessTime)) {
-                player.Score += points;
+                player.Score.Value += points;
                 points = Mathf.Max(1, points - 1);
             }
         }
@@ -504,9 +504,9 @@ public class GameCoordinator : NetworkBehaviour {
             var winners = Player.InGame.Where(p => p.Score.Value == maxScore);
             if (winners.Count() == 1) {
                 var winner = winners.Single();
-                MessageBoard.SubmitMessageRpc(Message.Server("Player " + winner.GameName + " wins!"));
+                MessageBoard.SubmitMessageClientRpc(Message.Server("Player " + winner.GameName + " wins!"));
             } else {
-                MessageBoard.SubmitMessageRpc(Message.Server("Game is a tie between " + string.Join(" and ", winners.Select(p => p.GameName).ToArray()) + "!"));
+                MessageBoard.SubmitMessageClientRpc(Message.Server("Game is a tie between " + string.Join(" and ", winners.Select(p => p.GameName.Value).ToArray()) + "!"));
             }
             StartLobby();
             return;
@@ -520,7 +520,7 @@ public class GameCoordinator : NetworkBehaviour {
             } while (!Player.All[currIndex].IsInGame.Value);
 
             _drawingPlayerId = Player.All[currIndex].NetworkObjectId;
-            UpdateDrawingPlayerRpc(_drawingPlayerId);
+            UpdateDrawingPlayerClientRpc(_drawingPlayerId);
         }
 
         startNextTurn();
@@ -533,7 +533,7 @@ public class GameCoordinator : NetworkBehaviour {
         _currentWordTransaction = _wordBankManager.Bank.BeginWord(new BasicSelector());
         _currentWordTransaction.SetPlayerCount(Player.InGame.Count());
 
-        UpdateCurrentWordRpc(CurrentWord, RpcSend.To(DrawingPlayer));
+        UpdateCurrentWordClientRpc(CurrentWord, RpcSend.To(DrawingPlayer));
 
         foreach (var player in Player.All) {
             player.HasGuessed.Value = false;
@@ -543,16 +543,16 @@ public class GameCoordinator : NetworkBehaviour {
         DrawingBoard.ClearAndReset();
 
         _serverTimeLeft = _timePerTurn.Value;
-        RpcUpdateTimeLeft(_serverTimeLeft, forceUpdate: true);
+        RpcUpdateTimeLeftClientRpc(_serverTimeLeft, forceUpdate: true);
     }
 
     [ClientRpc]
-    private void UpdateCurrentWordRpc(string word, ClientRpcParams clientRpcParams = default) {
+    private void UpdateCurrentWordClientRpc(string word, ClientRpcParams clientRpcParams = default) {
         _currentWordClient = word;
     }
 
     [ClientRpc]
-    private void UpdateDrawingPlayerRpc(ulong id) {
+    private void UpdateDrawingPlayerClientRpc(ulong id) {
         _drawingPlayerId = id;
     }
 

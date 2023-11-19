@@ -11,7 +11,7 @@ public class Player : NetworkBehaviour {
 
     public static Player Local;
     public static List<Player> All = new List<Player>();
-    public static IEnumerable<Player> InGame = All.Where(p => p._isInGame);
+    public static IEnumerable<Player> InGame = All.Where(p => p.IsInGame.Value);
 
     public static Action OnPlayerChange;
 
@@ -49,7 +49,7 @@ public class Player : NetworkBehaviour {
             Local = this;
         }
 
-        ChangeNameRpc(_namePref.Value);
+        ChangeNameServerRpc(_namePref.Value);
     }
 
     public override void OnNetworkDespawn() {
@@ -72,10 +72,10 @@ public class Player : NetworkBehaviour {
 
     private void Update() {
         if (IsLocalPlayer) {
-            float timeLeft = GameCoordinator.instance.TimeLeft;
+            float timeLeft = GameCoordinator.instance.TimeLeft.Value;
 
             if (timeLeft <= 0 && _prevTimeLeft > 0) {
-                NotifyTimerReachedZeroRpc();
+                NotifyTimerReachedZeroServerRpc();
             }
 
             _prevTimeLeft = timeLeft;
@@ -83,37 +83,37 @@ public class Player : NetworkBehaviour {
     }
 
     [ServerRpc]
-    private void ChangeNameRpc(string name) {
+    private void ChangeNameServerRpc(string name) {
         GameName.Value = name;
     }
 
     [ServerRpc]
-    private void NotifyTimerReachedZeroRpc() {
+    private void NotifyTimerReachedZeroServerRpc() {
         TimerHasReachedZero.Value = true;
     }
 
     [ServerRpc]
-    public void RejectWordRpc(ulong clickerId) {
+    public void RejectWordServerRpc(ulong clickerId) {
         GameCoordinator.instance.RejectCurrentWord(clickerId);
     }
 
     [ServerRpc]
-    public void PauseGameRpc() {
+    public void PauseGameServerRpc() {
         GameCoordinator.instance.SubmitPauseGame();
     }
 
     [ServerRpc]
-    public void UnpauseGameRpc() {
+    public void UnpauseGameServerRpc() {
         GameCoordinator.instance.SubmitResumeGame();
     }
 
     [ServerRpc]
-    public void DrawRpc(BrushAction brush) {
+    public void DrawServerRpc(BrushAction brush) {
         GameCoordinator.instance.SubmitBrush(this, brush);
     }
 
     [ServerRpc]
-    private void AddMessageRpc(Message msg) {
+    private void AddMessageServerRpc(Message msg) {
         GameCoordinator.instance.SubmitMessage(this, msg);
     }
 
@@ -121,20 +121,20 @@ public class Player : NetworkBehaviour {
 
 
     [ClientRpc]
-    public void UpdateNamePreferenceRpc(string name, ClientRpcParams clientRpcParams = default) {
+    public void UpdateNamePreferenceClientRpc(string name, ClientRpcParams clientRpcParams = default) {
         name = name.Trim();
         name = name.Substring(0, Mathf.Min(24, name.Length));
         _namePref.Value = name;
     }
 
     [ClientRpc]
-    public void ExecuteClientMessageRpc(Message message, ClientRpcParams clientRpcParams = default) {
+    public void ExecuteClientMessageClientRpc(Message message, ClientRpcParams clientRpcParams = default) {
         if (tryParseLocalMessage(message)) {
             return;
         }
 
         //Else if we couldn't process the message, send it to the server
-        AddMessageRpc(message);
+        AddMessageServerRpc(message);
     }
 
     private bool tryParseLocalMessage(Message message) {
@@ -147,7 +147,7 @@ public class Player : NetworkBehaviour {
         }
 
         if (tokens[0] == "/info") {
-            AddMessageRpc(Message.User("\n" +
+            AddMessageServerRpc(Message.User("\n" +
                                        B("Persistent Data Path:\n") +
                                        Application.persistentDataPath + "\n" +
                                        B("Word Bank Path:\n") +

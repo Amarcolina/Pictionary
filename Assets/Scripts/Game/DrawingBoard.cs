@@ -43,6 +43,7 @@ public class DrawingBoard : NetworkBehaviour {
 
     private float _recieveTime;
     private float _firstRecieveTimestamp;
+    private float _lastSendTime;
     private Queue<BrushAction> _toSendQueue = new Queue<BrushAction>();
 
     private Queue<BrushAction> _toDrawQueue = new Queue<BrushAction>();
@@ -110,7 +111,7 @@ public class DrawingBoard : NetworkBehaviour {
 
     public void ApplyBrushAction(BrushAction action) {
         action.time = GameCoordinator.instance.GameTime;
-        SetDirtyBit(1);
+        //SetDirtyBit(1);
 
         //We add the brush action to the send queue so that
         //when we serialize this board, the actions get serialized
@@ -123,11 +124,10 @@ public class DrawingBoard : NetworkBehaviour {
         _toDrawQueue.Enqueue(action);
     }
 
-    [Server]
     public void ClearAndReset() {
         var clearAction = new BrushAction() {
             type = BrushActionType.Clear,
-            drawerId = Player.Local.netId
+            drawerId = Player.Local.NetworkObjectId
         };
 
         //We apply a brush action to clear all clients
@@ -143,15 +143,14 @@ public class DrawingBoard : NetworkBehaviour {
                 position0 = new Vector2Int(-100, -100),
                 position1 = new Vector2Int(-100, -100),
                 size = 0,
-                drawerId = player.netId,
+                drawerId = player.NetworkObjectId,
                 isPreview = true
             });
         }
     }
 
-    [Client]
     public void PredictBrushAction(BrushAction action) {
-        Assert.AreEqual(action.drawerId, Player.Local.netId);
+        Assert.AreEqual(action.drawerId, Player.Local.NetworkObjectId);
         drawBrushActionToCanvases(action);
     }
 
@@ -160,7 +159,7 @@ public class DrawingBoard : NetworkBehaviour {
             var action = _toDrawQueue.Peek();
 
             //Skip actions that are from ourselves because those are predicted
-            if (action.drawerId == Player.Local.netId) {
+            if (action.drawerId == Player.Local.NetworkObjectId) {
                 _toDrawQueue.Dequeue();
                 continue;
             }
@@ -183,7 +182,7 @@ public class DrawingBoard : NetworkBehaviour {
             var player = pair.Key;
             var queue = pair.Value;
 
-            if (player == Player.Local.netId) {
+            if (player == Player.Local.NetworkObjectId) {
                 continue;
             }
 
@@ -221,24 +220,57 @@ public class DrawingBoard : NetworkBehaviour {
         //this can happen if there are too many actions to serialize
         //so we check here every frame and set the dirty bit if there
         //are some left
-        if (_toSendQueue.Count > 0) {
-            SetDirtyBit(1);
+        //if (_toSendQueue.Count > 0) {
+        //    SetDirtyBit(1);
+        //}
+
+        if ((Time.time - _lastSendTime) > SEND_INTERVAL) {
+            _lastSendTime = Time.time;
+
+            for (int i = 0; i < _maxActionsPerFrame; i++) {
+                if (_toSendQueue.Count == 0) {
+                    break;
+                }
+
+                var action = _toSendQueue.Dequeue();
+
+                if (IsServer) {
+                    SendActionToClientRpc(action);
+                } else {
+                    SendActionToServerRpc(action);
+                }
+            }
         }
     }
 
-    public override bool OnSerialize(NetworkWriter writer, bool initialState) {
-        if (_toSendQueue.Count > 0) {
-            serializeBrushActions(writer);
-            _toSendQueue.Clear();
-            return true;
-        } else {
-            return false;
-        }
+    [ServerRpc]
+    private void SendActionToServerRpc(BrushAction action) {
+        SendActionToClientRpc(action);
     }
 
-    public override void OnDeserialize(NetworkReader reader, bool initialState) {
-        deserializeBrushActions(reader);
+    [ClientRpc]
+    private void SendActionToClientRpc(BrushAction action) {
+        //Ignore actions that came from ourselves
+        if (action.drawerId == Player.Local.NetworkObjectId) {
+            return;
+        }
+
+        _toDrawQueue.Enqueue(action);
     }
+
+    //public override bool OnSerialize(NetworkWriter writer, bool initialState) {
+    //    if (_toSendQueue.Count > 0) {
+    //        serializeBrushActions(writer);
+    //        _toSendQueue.Clear();
+    //        return true;
+    //    } else {
+    //        return false;
+    //    }
+    //}
+
+    //public override void OnDeserialize(NetworkReader reader, bool initialState) {
+    //    deserializeBrushActions(reader);
+    //}
 
     private void drawBrushActionToCanvases(BrushAction action) {
         var previewCanvas = getPreviewCanvas(action.drawerId);
@@ -250,26 +282,26 @@ public class DrawingBoard : NetworkBehaviour {
         }
     }
 
-    private void serializeBrushActions(NetworkWriter writer) {
-        int toSend = Mathf.Min(_maxActionsPerFrame, _toSendQueue.Count);
+    //private void serializeBrushActions(NetworkWriter writer) {
+    //    int toSend = Mathf.Min(_maxActionsPerFrame, _toSendQueue.Count);
 
-        writer.WritePackedUInt32((uint)toSend);
+    //    writer.WritePackedUInt32((uint)toSend);
 
-        while (toSend != 0) {
-            var action = _toSendQueue.Dequeue();
-            action.Serialize(writer);
-            toSend--;
-        }
-    }
+    //    while (toSend != 0) {
+    //        var action = _toSendQueue.Dequeue();
+    //        action.Serialize(writer);
+    //        toSend--;
+    //    }
+    //}
 
-    private void deserializeBrushActions(NetworkReader reader) {
-        int count = (int)reader.ReadPackedUInt32();
-        for (int i = 0; i < count; i++) {
-            BrushAction action = new BrushAction();
-            action.Deserialize(reader);
-            _toDrawQueue.Enqueue(action);
-        }
-    }
+    //private void deserializeBrushActions(NetworkReader reader) {
+    //    int count = (int)reader.ReadPackedUInt32();
+    //    for (int i = 0; i < count; i++) {
+    //        BrushAction action = new BrushAction();
+    //        action.Deserialize(reader);
+    //        _toDrawQueue.Enqueue(action);
+    //    }
+    //}
 
     private struct ColorKey : IEquatable<ColorKey> {
         public byte r, g, b, a;

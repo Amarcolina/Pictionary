@@ -61,11 +61,11 @@ public class MainMenu : MonoBehaviour {
         break;
       case MenuState.DirectConnect:
         directConnectActive = true;
-        Manager.networkAddress = _directIpInput.text;
+        //Manager.networkAddress = _directIpInput.text;
         break;
       case MenuState.MatchMaker:
         netPlayActive = true;
-        Manager.matchName = _netMatchName.text;
+        //Manager.matchName = _netMatchName.text;
         break;
     }
 
@@ -87,7 +87,7 @@ public class MainMenu : MonoBehaviour {
   }
 
   public void OnSelectRefreshMatchList() {
-    Manager.matchMaker.ListMatches(0, 20, "", true, 0, 0, onRecieveMatchList);
+    //Manager.matchMaker.ListMatches(0, 20, "", true, 0, 0, onRecieveMatchList);
   }
 
   public void OnSelectHostDirect() {
@@ -99,14 +99,14 @@ public class MainMenu : MonoBehaviour {
   }
 
   public void OnSelectCreateMatch() {
-    if (Manager.matchMaker != null) {
-      Manager.matchName = Manager.matchName.Trim();
-      if (string.IsNullOrEmpty(Manager.matchName) || Manager.matchName.Length > 100) {
-        Manager.matchName = "New Game";
-      }
+    //if (Manager.matchMaker != null) {
+    //  Manager.matchName = Manager.matchName.Trim();
+    //  if (string.IsNullOrEmpty(Manager.matchName) || Manager.matchName.Length > 100) {
+    //    Manager.matchName = "New Game";
+    //  }
 
-      Manager.matchMaker.CreateMatch(Manager.matchName, Manager.matchSize, true, "", "", "", 0, 0, Manager.OnMatchCreate);
-    }
+    //  Manager.matchMaker.CreateMatch(Manager.matchName, Manager.matchSize, true, "", "", "", 0, 0, Manager.OnMatchCreate);
+    //}
   }
 
   public enum MenuState {
@@ -121,41 +121,41 @@ public class MainMenu : MonoBehaviour {
       return;
     }
 
-    switch (_menuState) {
-      case MenuState.MatchMaker:
-        Manager.StopMatchMaker();
-        break;
-    }
+    //switch (_menuState) {
+      //case MenuState.MatchMaker:
+        //Manager.StopMatchMaker();
+        //break;
+    //}
 
     _menuState = toState;
 
     switch (_menuState) {
       case MenuState.MatchMaker:
         _netMatchName.text = _namePref.Value + "'s Game";
-        Manager.StartMatchMaker();
+        //Manager.StartMatchMaker();
         OnSelectRefreshMatchList();
         break;
     }
   }
 
-  private void onRecieveMatchList(bool success, string extendedInfo, List<MatchInfoSnapshot> matches) {
-    foreach (var button in _spawnedButtons) {
-      DestroyImmediate(button);
-    }
+  //private void onRecieveMatchList(bool success, string extendedInfo, List<MatchInfoSnapshot> matches) {
+  //  foreach (var button in _spawnedButtons) {
+  //    DestroyImmediate(button);
+  //  }
 
-    for (int i = 0; i < matches.Count; i++) {
-      var match = matches[i];
-      var matchButton = Instantiate(_matchPrefab);
-      matchButton.transform.SetParent(_netListParent.transform);
-      matchButton.GetComponentInChildren<Text>().text = match.name;
-      matchButton.GetComponent<Button>().onClick.AddListener(() => {
-        Manager.matchName = match.name;
-        Manager.matchSize = (uint)match.currentSize;
-        Manager.matchMaker.JoinMatch(match.networkId, "", "", "", 0, 0, Manager.OnMatchJoined);
-      });
-      matchButton.SetActive(true);
+  //  for (int i = 0; i < matches.Count; i++) {
+  //    var match = matches[i];
+  //    var matchButton = Instantiate(_matchPrefab);
+  //    matchButton.transform.SetParent(_netListParent.transform);
+  //    matchButton.GetComponentInChildren<Text>().text = match.name;
+  //    matchButton.GetComponent<Button>().onClick.AddListener(() => {
+  //      Manager.matchName = match.name;
+  //      Manager.matchSize = (uint)match.currentSize;
+  //      Manager.matchMaker.JoinMatch(match.networkId, "", "", "", 0, 0, Manager.OnMatchJoined);
+  //    });
+  //    matchButton.SetActive(true);
 
-      _spawnedButtons.Add(matchButton);
-    }
-  }
+  //    _spawnedButtons.Add(matchButton);
+  //  }
+  //}
 }
