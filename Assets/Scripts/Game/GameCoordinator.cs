@@ -9,7 +9,7 @@ public static class RpcSend {
     public static ClientRpcParams To(NetworkBehaviour behaviour) {
         return new ClientRpcParams() {
             Send = new ClientRpcSendParams() {
-                TargetClientIds = new ulong[] { behaviour.NetworkObjectId }
+                TargetClientIds = new ulong[] { behaviour.OwnerClientId }
             }
         };
     }
@@ -56,6 +56,7 @@ public class GameCoordinator : NetworkBehaviour {
     public NetworkVariable<GameState> CurrentState;
     public NetworkVariable<bool> IsGamePaused;
     public NetworkVariable<int> TurnsLeft;
+    public NetworkVariable<float> TurnEndTime;
 
     #endregion
 
@@ -74,8 +75,8 @@ public class GameCoordinator : NetworkBehaviour {
         }
     }
 
-    public NetworkedTime GameTime { get; private set; }
-    public NetworkedTime TimeLeft { get; private set; }
+    public float GameTime => (float)NetworkManager.Singleton.ServerTime.Time;
+    public float TimeLeft => Mathf.Max(0, TurnEndTime.Value - GameTime);
 
     public Player DrawingPlayer {
         get {
@@ -148,14 +149,6 @@ public class GameCoordinator : NetworkBehaviour {
 
     private void Awake() {
         _cachedInstance = this;
-
-        GameTime = new NetworkedTime() {
-            Rate = 1
-        };
-
-        TimeLeft = new NetworkedTime() {
-            Rate = -1
-        };
     }
 
     private void OnEnable() {
@@ -168,7 +161,6 @@ public class GameCoordinator : NetworkBehaviour {
 
     private void Start() {
         if (IsServer) {
-            StartCoroutine(updateTimeCoroutine());
             StartLobby();
         }
     }
@@ -186,7 +178,6 @@ public class GameCoordinator : NetworkBehaviour {
     #endregion
 
     #region GENERAL IMPLEMENTATION
-    private float _serverTimeLeft;
 
     private void OnDraw(BrushAction brush) {
         brush.drawerId = Player.Local.NetworkObjectId;
@@ -195,25 +186,6 @@ public class GameCoordinator : NetworkBehaviour {
             _drawingBoard.PredictBrushAction(brush);
             Player.Local.DrawServerRpc(brush);
         }
-    }
-
-    private IEnumerator updateTimeCoroutine() {
-        var wait1Second = new WaitForSeconds(1);
-        while (true) {
-            yield return wait1Second;
-            RpcUpdateGameTimeClientRpc(Time.realtimeSinceStartup, forceUpdate: false);
-            RpcUpdateTimeLeftClientRpc(_serverTimeLeft, forceUpdate: false);
-        }
-    }
-
-    [ClientRpc]
-    private void RpcUpdateGameTimeClientRpc(float time, bool forceUpdate) {
-        GameTime.Update(time, forceUpdate);
-    }
-
-    [ClientRpc]
-    private void RpcUpdateTimeLeftClientRpc(float time, bool forceUpdate) {
-        TimeLeft.Update(time, forceUpdate);
     }
 
     private bool tryParseUserCommand(Player player, string command) {
@@ -355,7 +327,7 @@ public class GameCoordinator : NetworkBehaviour {
             MessageBoard.SubmitMessageClientRpc(Message.Server(clickingPlayer.GameName + " has rejected the word " + CurrentWord + "."));
 
             //Then we record the rejection in the current word transaction, and complete the transaction
-            _currentWordTransaction.Reject(1.0f - _serverTimeLeft / _timePerTurn.Value);
+            _currentWordTransaction.Reject(1.0f - TimeLeft / _timePerTurn.Value);
             _currentWordTransaction.CompleteTransaction();
             _currentWordTransaction = null;
             _wordBankManager.SaveActiveWordBank();
@@ -372,11 +344,11 @@ public class GameCoordinator : NetworkBehaviour {
             }
 
             if (!IsGamePaused.Value) {
-                if (Input.GetKey(KeyCode.F2)) {
-                    _serverTimeLeft = Mathf.MoveTowards(_serverTimeLeft, 0, Time.deltaTime * 10);
-                } else {
-                    _serverTimeLeft = Mathf.MoveTowards(_serverTimeLeft, 0, Time.deltaTime);
-                }
+                //if (Input.GetKey(KeyCode.F2)) {
+                //    _serverTimeLeft = Mathf.MoveTowards(_serverTimeLeft, 0, Time.deltaTime * 10);
+                //} else {
+                //    _serverTimeLeft = Mathf.MoveTowards(_serverTimeLeft, 0, Time.deltaTime);
+                //}
             }
 
             if (Player.All.All(p => p.TimerHasReachedZero.Value)) {
@@ -428,7 +400,7 @@ public class GameCoordinator : NetworkBehaviour {
             MessageBoard.SubmitMessageClientRpc(message, RpcSend.To(player));
 
             //Don't submit the actual message to the rest, just tell everyone that they have guessed correctly
-            MessageBoard.SubmitMessageClientRpc(Message.Server(player.GameName + " has guessed!"));
+            MessageBoard.SubmitMessageClientRpc(Message.Server(player.GameName.Value + " has guessed!"));
 
             player.guessTime = message.boardDisplayTime;
             player.HasGuessed.Value = true;
@@ -442,8 +414,7 @@ public class GameCoordinator : NetworkBehaviour {
             //If this is the first person to guess
             //Set the time to be 15 seconds remaining!
             if (Player.All.Count(p => p.HasGuessed.Value) == 1) {
-                _serverTimeLeft = _endOfGameDelay.Value;
-                RpcUpdateTimeLeftClientRpc(_serverTimeLeft, forceUpdate: true);
+                TurnEndTime.Value = GameTime + _endOfGameDelay.Value;
                 return;
             }
 
@@ -543,8 +514,7 @@ public class GameCoordinator : NetworkBehaviour {
 
         DrawingBoard.ClearAndReset();
 
-        _serverTimeLeft = _timePerTurn.Value;
-        RpcUpdateTimeLeftClientRpc(_serverTimeLeft, forceUpdate: true);
+        TurnEndTime.Value = GameTime + _timePerTurn.Value;
     }
 
     [ClientRpc]

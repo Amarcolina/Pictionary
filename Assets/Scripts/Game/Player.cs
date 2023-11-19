@@ -75,7 +75,7 @@ public class Player : NetworkBehaviour {
 
     private void Update() {
         if (IsLocalPlayer) {
-            float timeLeft = GameCoordinator.instance.TimeLeft.Value;
+            float timeLeft = GameCoordinator.instance.TimeLeft;
 
             if (timeLeft <= 0 && _prevTimeLeft > 0) {
                 NotifyTimerReachedZeroServerRpc();
