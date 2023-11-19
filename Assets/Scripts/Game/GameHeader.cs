@@ -127,7 +127,7 @@ public class GameHeader : MonoBehaviour {
         _turnsLeftLabel.text = "";
         break;
       case GameCoordinator.GameState.ClassicGame:
-        _turnsLeftLabel.text = GameCoordinator.instance.TurnsLeft.ToString();
+        _turnsLeftLabel.text = GameCoordinator.instance.TurnsLeft.Value.ToString();
         break;
     }
   }
