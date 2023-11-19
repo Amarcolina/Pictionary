@@ -222,7 +222,7 @@ public class Paintbrush : MonoBehaviour {
     }
 
     private void Update() {
-        if (!NetworkManager.Singleton.IsClient) {
+        if (Player.Local == null) {
             return;
         }
 
