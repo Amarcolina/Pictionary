@@ -249,11 +249,11 @@ public class DrawingBoard : NetworkBehaviour {
         if ((Time.time - _lastSendTime) > SEND_INTERVAL) {
             _lastSendTime = Time.time;
 
-            for (int i = 0; i < _maxActionsPerFrame; i++) {
-                if (_toSendQueue.Count == 0) {
-                    break;
-                }
-
+            //for (int i = 0; i < _maxActionsPerFrame; i++) {
+            //    if (_toSendQueue.Count == 0) {
+            //        break;
+            //    }
+            while (_toSendQueue.Count > 0) {
                 var action = _toSendQueue.Dequeue();
 
                 if (IsServer) {
