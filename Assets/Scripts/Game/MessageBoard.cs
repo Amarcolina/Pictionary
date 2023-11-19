@@ -85,7 +85,7 @@ public class MessageBoard : NetworkBehaviour {
             return;
         }
         if (Input.GetKey(KeyCode.Return) || Input.GetKey(KeyCode.KeypadEnter) || Input.GetKey(KeyCode.F3)) {
-            Player.Local.ExecuteClientMessageClientRpc(Message.User(text));
+            Player.Local.ExecuteClientMessage(Message.User(text));
             _inputField.text = "";
         }
     }

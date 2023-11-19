@@ -130,8 +130,7 @@ public class Player : NetworkBehaviour {
         _namePref.Value = name;
     }
 
-    [ClientRpc]
-    public void ExecuteClientMessageClientRpc(Message message, ClientRpcParams clientRpcParams = default) {
+    public void ExecuteClientMessage(Message message) {
         if (tryParseLocalMessage(message)) {
             return;
         }
