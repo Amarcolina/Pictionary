@@ -244,6 +244,7 @@ public class GameCoordinator : NetworkBehaviour {
                 color = new Color32(0, 0, 0, 0),
                 bold = false,
                 text =
+              "\n" +
               "<b>/help</b>\n" +
               "Shows the list of commands\n" +
               "<b>/play</b>\n" +
@@ -254,7 +255,7 @@ public class GameCoordinator : NetworkBehaviour {
               "Changes your name\n" +
               "<b>/quit</b>\n" +
               "Quits to the lobby"
-            });
+            }, RpcSend.To(player));
             return true;
         }
 
