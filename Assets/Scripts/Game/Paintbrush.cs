@@ -160,6 +160,9 @@ public class Paintbrush : MonoBehaviour {
     }
 
     [SerializeField]
+    private DrawingBoard _drawingBoard;
+
+    [SerializeField]
     [FormerlySerializedAs("board")]
     private RectTransform _board;
 
@@ -201,8 +204,8 @@ public class Paintbrush : MonoBehaviour {
             float dx = inverseLerpUnclamped(rect.x, rect.x + rect.width, Input.mousePosition.x);
             float dy = inverseLerpUnclamped(rect.y, rect.y + rect.height, Input.mousePosition.y);
 
-            int cx = Mathf.RoundToInt(dx * _board.rect.width);
-            int cy = Mathf.RoundToInt(dy * _board.rect.height);
+            int cx = Mathf.RoundToInt(dx * _drawingBoard.ResolutionX);
+            int cy = Mathf.RoundToInt(dy * _drawingBoard.ResolutionY);
 
             return new Vector2Int(cx, cy);
         }

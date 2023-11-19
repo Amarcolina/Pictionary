@@ -154,7 +154,25 @@ public class DrawingBoard : NetworkBehaviour {
         drawBrushActionToCanvases(action);
     }
 
+    private void ScaleBoardToFit() {
+        var boardParent = _boardImage.transform.parent as RectTransform;
+        var parentWidth = boardParent.rect.width;
+        var parentHeight = boardParent.rect.height;
+
+        float maxScale = Mathf.Max(1, Mathf.Floor(Mathf.Min(parentWidth / ResolutionX, parentHeight / ResolutionY)));
+
+        _boardImage.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, ResolutionX * maxScale);
+        _boardImage.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, ResolutionY * maxScale);
+
+        foreach (var pair in _previewImages) {
+            pair.Value.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, ResolutionX * maxScale);
+            pair.Value.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, ResolutionY * maxScale);
+        }
+    }
+
     private void Update() {
+        ScaleBoardToFit();
+
         if (Player.Local == null) {
             return;
         }

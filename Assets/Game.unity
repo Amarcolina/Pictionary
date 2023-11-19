@@ -5181,6 +5181,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c19b0716e52da794dac5d5818ae1dbd7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _drawingBoard: {fileID: 178297100}
   _board: {fileID: 1982193400}
   _maxBrushSize: 7
   _scrollSensitivity: 1
