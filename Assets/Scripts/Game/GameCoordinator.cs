@@ -324,7 +324,7 @@ public class GameCoordinator : NetworkBehaviour {
         //And as long as nobody has guessed yet
         if (clickingPlayer == DrawingPlayer && Player.All.All(p => !p.HasGuessed.Value)) {
             //First we let everybody know the word has been rejected, and what the word was
-            MessageBoard.SubmitMessageClientRpc(Message.Server(clickingPlayer.GameName + " has rejected the word " + CurrentWord + "."));
+            MessageBoard.SubmitMessageClientRpc(Message.Server(clickingPlayer.GameName.Value + " has rejected the word " + CurrentWord + "."));
 
             //Then we record the rejection in the current word transaction, and complete the transaction
             _currentWordTransaction.Reject(1.0f - TimeLeft / _timePerTurn.Value);
@@ -476,7 +476,7 @@ public class GameCoordinator : NetworkBehaviour {
             var winners = Player.InGame.Where(p => p.Score.Value == maxScore);
             if (winners.Count() == 1) {
                 var winner = winners.Single();
-                MessageBoard.SubmitMessageClientRpc(Message.Server("Player " + winner.GameName + " wins!"));
+                MessageBoard.SubmitMessageClientRpc(Message.Server("Player " + winner.GameName.Value + " wins!"));
             } else {
                 MessageBoard.SubmitMessageClientRpc(Message.Server("Game is a tie between " + string.Join(" and ", winners.Select(p => p.GameName.Value).ToArray()) + "!"));
             }
