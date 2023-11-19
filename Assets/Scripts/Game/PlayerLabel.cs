@@ -32,7 +32,7 @@ public class PlayerLabel : MonoBehaviour {
         break;
       case GameCoordinator.GameState.ClassicGame:
         if (player.IsInGame.Value) {
-          _scoreLabel.text = player.Score.ToString();
+          _scoreLabel.text = player.Score.Value.ToString();
           if (GameCoordinator.instance.DrawingPlayer == player) {
             color = _drawingColor;
           }
