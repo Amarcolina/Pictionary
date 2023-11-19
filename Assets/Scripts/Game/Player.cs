@@ -50,7 +50,9 @@ public class Player : NetworkBehaviour {
             Local = this;
         }
 
-        ChangeNameServerRpc(_namePref.Value);
+        if (IsOwner) {
+            ChangeNameServerRpc(_namePref.Value);
+        }
     }
 
     public override void OnNetworkDespawn() {
