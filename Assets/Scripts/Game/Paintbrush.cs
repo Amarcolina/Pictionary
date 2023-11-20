@@ -144,7 +144,7 @@ public enum BrushActionType {
 
 public class Paintbrush : MonoBehaviour {
 
-    public const float DRAW_FRAMERATE = 20.5f;
+    public const float DRAW_FRAMERATE = 30.5f;
     public const float DRAW_DELTA = 1f / DRAW_FRAMERATE;
 
     public static Action<BrushAction> OnDraw;
@@ -242,13 +242,18 @@ public class Paintbrush : MonoBehaviour {
 
         if (OnDraw != null && GameCoordinator.instance.CanPlayerDraw(Player.Local)) {
             if (!Input.GetKey(KeyCode.Mouse0)) {
-                TryExecuteDraw(new BrushAction() {
+                var action = new BrushAction() {
+                    drawerId = Player.Local.NetworkObjectId,
                     type = BrushActionType.PreviewBox,
                     position0 = CurrCursor,
                     size = IntSize,
                     color = _color,
                     isPreview = true
-                });
+                };
+
+                if (!TryExecuteDraw(action)) {
+                    GameCoordinator.instance.DrawingBoard.PredictBrushAction(action);
+                }
             }
         }
 
@@ -317,12 +322,14 @@ public class Paintbrush : MonoBehaviour {
                 position0 = prevCursor,
                 position1 = CurrCursor,
                 color = _color,
-                size = erase ? _eraseSize : IntSize
+                size = erase ? _eraseSize : IntSize,
+                drawerId = Player.Local.NetworkObjectId
             };
 
             if (TryExecuteDraw(action)) {
                 prevCursor = CurrCursor;
             } else {
+                action.isPreview = true;
                 GameCoordinator.instance.DrawingBoard.PredictBrushAction(action);
             }
 
@@ -336,14 +343,20 @@ public class Paintbrush : MonoBehaviour {
         Vector2Int startCursor = CurrCursor;
 
         while (Input.GetKey(KeyCode.Mouse0)) {
-            TryExecuteDraw(new BrushAction() {
+            var action = new BrushAction() {
                 type = (BrushActionType)_tool,
                 position0 = startCursor,
                 position1 = CurrCursor,
                 color = _color,
                 size = IntSize,
                 isPreview = true
-            });
+            };
+
+            if (!TryExecuteDraw(action)) {
+                action.isPreview = true;
+                action.drawerId = Player.Local.NetworkObjectId;
+                GameCoordinator.instance.DrawingBoard.PredictBrushAction(action);
+            }
 
             yield return null;
         }

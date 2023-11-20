@@ -56,7 +56,7 @@ public class MainMenu : MonoBehaviour {
         bool netPlayActive = false;
         bool optionsActive = false;
 
-        new RelayServerData(0)
+        //new RelayServerData(0)
 
         switch (_menuState) {
             case MenuState.Options:
