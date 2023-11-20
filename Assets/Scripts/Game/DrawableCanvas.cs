@@ -182,7 +182,6 @@ public class DrawableCanvas : IDisposable {
                 break;
             case BrushActionType.Erase:
                 DrawLine(action.position0, action.position1, Color.white, action.size);
-                DrawLine(action.position1, action.position1, Color.black, action.size);
                 break;
             default:
                 throw new ArgumentException("Unexpected brush type " + action.type);

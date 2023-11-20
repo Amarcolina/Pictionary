@@ -231,7 +231,7 @@ public class Paintbrush : MonoBehaviour {
         StartCoroutine(controlCoroutine());
     }
 
-    private void Update() {
+    private void LateUpdate() {
         if (Player.Local == null) {
             return;
         }
@@ -241,19 +241,22 @@ public class Paintbrush : MonoBehaviour {
         }
 
         if (OnDraw != null && GameCoordinator.instance.CanPlayerDraw(Player.Local)) {
-            if (!Input.GetKey(KeyCode.Mouse0)) {
-                var action = new BrushAction() {
-                    drawerId = Player.Local.NetworkObjectId,
-                    type = BrushActionType.PreviewBox,
-                    position0 = CurrCursor,
-                    size = IntSize,
-                    color = _color,
-                    isPreview = true
-                };
+            var action = new BrushAction() {
+                drawerId = Player.Local.NetworkObjectId,
+                type = BrushActionType.PreviewBox,
+                position0 = CurrCursor,
+                size = IntSize,
+                color = _color,
+                isPreview = true
+            };
 
-                if (!TryExecuteDraw(action)) {
-                    GameCoordinator.instance.DrawingBoard.PredictBrushAction(action);
-                }
+            if (Input.GetKey(KeyCode.Mouse1)) {
+                action.size = _eraseSize;
+                action.color = Color.white;
+            }
+
+            if (Input.GetKey(KeyCode.Mouse0) || Input.GetKey(KeyCode.Mouse1) || !TryExecuteDraw(action)) {
+                GameCoordinator.instance.DrawingBoard.PredictBrushAction(action);
             }
         }
 
@@ -334,7 +337,7 @@ public class Paintbrush : MonoBehaviour {
             }
 
             yield return null;
-        } while (Input.GetKey(KeyCode.Mouse0));
+        } while (Input.GetKey(KeyCode.Mouse0) || Input.GetKey(KeyCode.Mouse1));
 
         action.isPreview = false;
         TryExecuteDraw(action, forceDraw: true);
