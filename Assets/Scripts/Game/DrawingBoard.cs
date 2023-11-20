@@ -64,7 +64,9 @@ public class DrawingBoard : NetworkBehaviour {
         }
     }
 
-    private void Awake() {
+    public override void OnNetworkSpawn() {
+        base.OnNetworkSpawn();
+
         _boardCanvas = new DrawableCanvas(_resolutionX, _resolutionY);
 
         var sprite = Sprite.Create(_boardCanvas.Texture, new Rect(0, 0, _resolutionX, _resolutionY), Vector2.zero);
@@ -79,6 +81,7 @@ public class DrawingBoard : NetworkBehaviour {
         foreach (var canvas in _previewCanvases.Values) {
             canvas.Dispose();
         }
+        _previewCanvases.Clear();
     }
 
     private Image getPreviewImage(ulong player) {

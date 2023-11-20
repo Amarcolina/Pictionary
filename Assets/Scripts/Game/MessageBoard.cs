@@ -65,7 +65,14 @@ public class MessageBoard : NetworkBehaviour {
     [FormerlySerializedAs("messageList")]
     private List<string> _messageList;
 
-    private void Update() {
+    public override void OnNetworkSpawn() {
+        base.OnNetworkSpawn();
+
+        _messageList.Clear();
+        PushText();
+    }
+
+    private void PushText() {
         string text = "";
         foreach (var item in _messageList) {
             if (text != "") {
@@ -74,10 +81,6 @@ public class MessageBoard : NetworkBehaviour {
             text += item;
         }
         _textBox.text = text;
-
-        if (Input.GetKey(KeyCode.F3)) {
-            OnSubmitText(Random.Range(0, 1000).ToString().PadLeft(4, '0'));
-        }
     }
 
     public void OnSubmitText(string text) {
@@ -114,6 +117,8 @@ public class MessageBoard : NetworkBehaviour {
         while (_messageList.Count > MAX_MESSAGE_HISTORY) {
             _messageList.RemoveAt(0);
         }
+
+        PushText();
 
         StartCoroutine(updateAfterOneFrame());
     }

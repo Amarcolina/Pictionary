@@ -5,6 +5,7 @@ using Unity.Jobs;
 using Unity.Collections;
 using UnityObject = UnityEngine.Object;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Burst;
 
 /// <summary>
 /// Represents a canvas that can be drawn to in different ways.
@@ -484,6 +485,7 @@ public class DrawableCanvas : IDisposable {
         }
     }
 
+    [BurstCompile]
     private struct ScanlineFillJob : IJob {
         [ReadOnly, DeallocateOnJobCompletion]
         public NativeArray<Color32> colors;
@@ -563,6 +565,7 @@ public class DrawableCanvas : IDisposable {
         }
     }
 
+    [BurstCompile]
     private struct FloodFillJob : IJobParallelFor {
         [WriteOnly]
         public NativeArray<Color32> colors;
