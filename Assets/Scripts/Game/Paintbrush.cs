@@ -5,14 +5,69 @@ using Unity.Netcode;
 using UnityEngine.Serialization;
 
 public struct BrushAction : INetworkSerializable {
-    public ulong drawerId;
-    public BrushActionType type;
-    public int x0, y0;
-    public int x1, y1;
-    public Color32 color;
-    public int size;
-    public float time;
-    public bool isPreview;
+
+    public ulong drawerId {
+        get => _drawerId;
+        set => _drawerId = value;
+    }
+
+    public BrushActionType type {
+        get => (BrushActionType)_type;
+        set => _type = (byte)value;
+    }
+
+    public int x0 {
+        get => _x0;
+        set => _x0 = (ushort)value;
+    }
+
+    public int y0 {
+        get => _y0;
+        set => _y0 = (ushort)value;
+    }
+
+    public int x1 {
+        get => _x1;
+        set => _x1 = (ushort)value;
+    }
+
+    public int y1 {
+        get => _y1;
+        set => _y1 = (ushort)value;
+    }
+
+    public Color32 color {
+        get => new Color32(_r, _g, _b, 255);
+        set {
+            _r = value.r;
+            _g = value.g;
+            _b = value.b;
+        }
+    }
+
+    public int size {
+        get => _size;
+        set => _size = (byte)value;
+    }
+
+    public float time {
+        get => _time;
+        set => _time = value;
+    }
+
+    public bool isPreview {
+        get => _isPreview;
+        set => _isPreview = value;
+    }
+
+    private ulong _drawerId;
+    private byte _r, _g, _b;
+    private byte _size;
+    private byte _type;
+    private bool _isPreview;
+    private ushort _x0, _y0;
+    private ushort _x1, _y1;
+    private float _time;
 
     public Vector2Int position0 {
         get {
@@ -35,10 +90,10 @@ public struct BrushAction : INetworkSerializable {
     }
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter {
-        serializer.SerializeValue(ref drawerId);
-        serializer.SerializeValue(ref type);
-        serializer.SerializeValue(ref time);
-        serializer.SerializeValue(ref isPreview);
+        serializer.SerializeValue(ref _drawerId);
+        serializer.SerializeValue(ref _type);
+        serializer.SerializeValue(ref _time);
+        serializer.SerializeValue(ref _isPreview);
 
         switch (type) {
             case BrushActionType.Clear:
@@ -47,95 +102,34 @@ public struct BrushAction : INetworkSerializable {
             case BrushActionType.Box:
             case BrushActionType.Oval:
             case BrushActionType.PreviewBox:
-                serializer.SerializeValue(ref x0);
-                serializer.SerializeValue(ref y0);
-                serializer.SerializeValue(ref x1);
-                serializer.SerializeValue(ref y1);
+                serializer.SerializeValue(ref _x0);
+                serializer.SerializeValue(ref _y0);
+                serializer.SerializeValue(ref _x1);
+                serializer.SerializeValue(ref _y1);
 
-                serializer.SerializeValue(ref color);
-                serializer.SerializeValue(ref size);
+                serializer.SerializeValue(ref _r);
+                serializer.SerializeValue(ref _g);
+                serializer.SerializeValue(ref _b);
+                serializer.SerializeValue(ref _size);
                 break;
             case BrushActionType.FloodFill:
-                serializer.SerializeValue(ref x0);
-                serializer.SerializeValue(ref y0);
+                serializer.SerializeValue(ref _x0);
+                serializer.SerializeValue(ref _y0);
 
-                serializer.SerializeValue(ref color);
+                serializer.SerializeValue(ref _r);
+                serializer.SerializeValue(ref _g);
+                serializer.SerializeValue(ref _b);
+                break;
+            case BrushActionType.Erase:
+                serializer.SerializeValue(ref _x0);
+                serializer.SerializeValue(ref _y0);
+                serializer.SerializeValue(ref _x1);
+                serializer.SerializeValue(ref _y1);
+
+                serializer.SerializeValue(ref _size);
                 break;
         }
     }
-
-    public void Serialize(FastBufferWriter writer) {
-        writer.WriteValue(drawerId);
-        writer.WriteValue((byte)type);
-        writer.WriteValue(time);
-        writer.WriteValue(isPreview);
-
-        switch (type) {
-            case BrushActionType.Clear:
-                break;
-            case BrushActionType.Line:
-            case BrushActionType.Box:
-            case BrushActionType.Oval:
-            case BrushActionType.PreviewBox:
-                writer.WriteValue((ushort)position0.x);
-                writer.WriteValue((ushort)position0.y);
-                writer.WriteValue((ushort)position1.x);
-                writer.WriteValue((ushort)position1.y);
-                writer.WriteValue(color);
-                writer.WriteValue((byte)size);
-                break;
-            case BrushActionType.FloodFill:
-                writer.WriteValue((ushort)position0.x);
-                writer.WriteValue((ushort)position0.y);
-                writer.WriteValue(color);
-                break;
-        }
-    }
-
-    public void Deserialize(FastBufferReader reader) {
-        reader.ReadValue(out drawerId);
-
-        reader.ReadValue(out byte typeData);
-        type = (BrushActionType)typeData;
-
-        reader.ReadValue(out time);
-        reader.ReadValue(out isPreview);
-
-        switch (type) {
-            case BrushActionType.Clear:
-                break;
-            case BrushActionType.Line:
-            case BrushActionType.Box:
-            case BrushActionType.Oval:
-            case BrushActionType.PreviewBox: {
-                    reader.ReadValue(out ushort x0Data);
-                    reader.ReadValue(out ushort y0Data);
-                    reader.ReadValue(out ushort x1Data);
-                    reader.ReadValue(out ushort y1Data);
-                    reader.ReadValue(out byte sizeData);
-                    reader.ReadValue(out color);
-
-
-                    x0 = (short)x0Data;
-                    y0 = (short)y0Data;
-                    x1 = (short)x1Data;
-                    y1 = (short)y1Data;
-                    size = (byte)sizeData;
-                    break;
-                }
-            case BrushActionType.FloodFill: {
-                    reader.ReadValue(out ushort x0Data);
-                    reader.ReadValue(out ushort y0Data);
-                    reader.ReadValue(out color);
-
-                    x0 = (short)x0Data;
-                    y0 = (short)y0Data;
-                    break;
-                }
-        }
-    }
-
-
 }
 
 public enum BrushActionType {
@@ -144,10 +138,14 @@ public enum BrushActionType {
     Box = 2,
     Oval = 3,
     FloodFill = 4,
-    PreviewBox = 5
+    PreviewBox = 5,
+    Erase = 6
 }
 
 public class Paintbrush : MonoBehaviour {
+
+    public const float DRAW_FRAMERATE = 20.5f;
+    public const float DRAW_DELTA = 1f / DRAW_FRAMERATE;
 
     public static Action<BrushAction> OnDraw;
 
@@ -191,6 +189,8 @@ public class Paintbrush : MonoBehaviour {
     [FormerlySerializedAs("color")]
     private Color _color;
 
+    private float _lastDrawTime;
+
     public int IntSize {
         get {
             return Mathf.RoundToInt(_size);
@@ -216,6 +216,16 @@ public class Paintbrush : MonoBehaviour {
                cursor.y >= 0 && cursor.y < _board.sizeDelta.y;
     }
 
+    private bool TryExecuteDraw(BrushAction action, bool forceDraw = false) {
+        if (forceDraw || (Time.time - _lastDrawTime) > DRAW_DELTA) {
+            OnDraw?.Invoke(action);
+            _lastDrawTime = Time.time;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     #region UPDATE LOGIC
     private void Start() {
         StartCoroutine(controlCoroutine());
@@ -232,7 +242,7 @@ public class Paintbrush : MonoBehaviour {
 
         if (OnDraw != null && GameCoordinator.instance.CanPlayerDraw(Player.Local)) {
             if (!Input.GetKey(KeyCode.Mouse0)) {
-                OnDraw(new BrushAction() {
+                TryExecuteDraw(new BrushAction() {
                     type = BrushActionType.PreviewBox,
                     position0 = CurrCursor,
                     size = IntSize,
@@ -270,7 +280,7 @@ public class Paintbrush : MonoBehaviour {
             if (Input.GetKeyDown(KeyCode.Mouse0)) {
                 switch (_tool) {
                     case Tool.Freehand:
-                        yield return StartCoroutine(freeformCoroutine());
+                        yield return StartCoroutine(freeformCoroutine(erase: false));
                         break;
                     case Tool.Line:
                     case Tool.Box:
@@ -292,86 +302,59 @@ public class Paintbrush : MonoBehaviour {
                         break;
                 }
             } else if (Input.GetKeyDown(KeyCode.Mouse1)) {
-                Debug.Log("Asd?");
-                yield return StartCoroutine(eraseCoroutine());
+                yield return StartCoroutine(freeformCoroutine(erase: true));
             }
         }
     }
 
-    IEnumerator eraseCoroutine() {
+    IEnumerator freeformCoroutine(bool erase) {
         Vector2Int prevCursor = CurrCursor;
+        BrushAction action;
 
-        while (Input.GetKey(KeyCode.Mouse1)) {
-            if (OnDraw != null) {
-                OnDraw(new BrushAction() {
-                    type = BrushActionType.Line,
-                    position0 = prevCursor,
-                    position1 = CurrCursor,
-                    color = new Color(1, 1, 1, 1),
-                    size = _eraseSize
-                });
+        do {
+            action = new BrushAction() {
+                type = erase ? BrushActionType.Erase : BrushActionType.Line,
+                position0 = prevCursor,
+                position1 = CurrCursor,
+                color = _color,
+                size = erase ? _eraseSize : IntSize
+            };
 
-                OnDraw(new BrushAction() {
-                    type = BrushActionType.Box,
-                    position0 = CurrCursor - new Vector2Int(_eraseSize, _eraseSize),
-                    position1 = CurrCursor + new Vector2Int(_eraseSize, _eraseSize),
-                    color = new Color(0, 0, 0, 1),
-                    size = 0,
-                    isPreview = true
-                });
+            if (TryExecuteDraw(action)) {
+                prevCursor = CurrCursor;
+            } else {
+                GameCoordinator.instance.DrawingBoard.PredictBrushAction(action);
             }
 
-            prevCursor = CurrCursor;
             yield return null;
-        }
-    }
+        } while (Input.GetKey(KeyCode.Mouse0));
 
-    IEnumerator freeformCoroutine() {
-        Vector2Int prevCursor = CurrCursor;
-
-        while (Input.GetKey(KeyCode.Mouse0)) {
-            if (OnDraw != null) {
-                OnDraw(new BrushAction() {
-                    type = BrushActionType.Line,
-                    position0 = prevCursor,
-                    position1 = CurrCursor,
-                    color = _color,
-                    size = IntSize
-                });
-            }
-
-            prevCursor = CurrCursor;
-            yield return null;
-        }
+        TryExecuteDraw(action, forceDraw: true);
     }
 
     IEnumerator shapeCoroutine() {
         Vector2Int startCursor = CurrCursor;
 
         while (Input.GetKey(KeyCode.Mouse0)) {
-            if (OnDraw != null) {
-                OnDraw(new BrushAction() {
-                    type = (BrushActionType)_tool,
-                    position0 = startCursor,
-                    position1 = CurrCursor,
-                    color = _color,
-                    size = IntSize,
-                    isPreview = true
-                });
-            }
-
-            yield return null;
-        }
-
-        if (OnDraw != null) {
-            OnDraw(new BrushAction() {
+            TryExecuteDraw(new BrushAction() {
                 type = (BrushActionType)_tool,
                 position0 = startCursor,
                 position1 = CurrCursor,
                 color = _color,
-                size = IntSize
+                size = IntSize,
+                isPreview = true
             });
+
+            yield return null;
         }
+
+        TryExecuteDraw(new BrushAction() {
+            type = (BrushActionType)_tool,
+            position0 = startCursor,
+            position1 = CurrCursor,
+            color = _color,
+            size = IntSize
+        }, forceDraw: true);
     }
 
     public void SetTool(int newTool) {
