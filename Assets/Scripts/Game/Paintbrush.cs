@@ -255,7 +255,7 @@ public class Paintbrush : MonoBehaviour {
                 action.color = Color.white;
             }
 
-            if (Input.GetKey(KeyCode.Mouse0) || Input.GetKey(KeyCode.Mouse1) || !TryExecuteDraw(action)) {
+            if (!Input.GetKey(KeyCode.Mouse0) && !TryExecuteDraw(action)) {
                 GameCoordinator.instance.DrawingBoard.PredictBrushAction(action);
             }
         }
@@ -296,7 +296,7 @@ public class Paintbrush : MonoBehaviour {
                         yield return StartCoroutine(shapeCoroutine());
                         break;
                     case Tool.FloodFill:
-                        if (OnDraw != null) {
+                        if (OnDraw != null && CurrCursor.x > 0 && CurrCursor.y > 0 && CurrCursor.x < _drawingBoard.ResolutionX && CurrCursor.y < _drawingBoard.ResolutionY) {
                             OnDraw(new BrushAction() {
                                 type = BrushActionType.FloodFill,
                                 position0 = CurrCursor,

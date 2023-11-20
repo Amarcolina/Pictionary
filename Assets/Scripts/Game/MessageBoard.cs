@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Unity.Netcode;
 using UnityEngine.Serialization;
+using static RichTextUtility;
 
 public struct Message : INetworkSerializable {
     public ulong netId;
@@ -46,7 +47,7 @@ public struct Message : INetworkSerializable {
 }
 
 public class MessageBoard : NetworkBehaviour {
-    public const int MAX_MESSAGE_HISTORY = 48;
+    public const int MAX_MESSAGE_HISTORY = 100;
 
     [SerializeField]
     [FormerlySerializedAs("textBox")]
@@ -100,7 +101,7 @@ public class MessageBoard : NetworkBehaviour {
 
         var player = Player.All.SingleOrDefault(p => p.NetworkObjectId == msg.netId);
         if (player != null) {
-            text = player.GameName.Value + ": " + text;
+            text = B(player.GameName.Value.Value) + ": " + text;
         }
 
         msg.color.a = 255;
