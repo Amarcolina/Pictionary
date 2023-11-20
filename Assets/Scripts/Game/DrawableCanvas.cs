@@ -169,13 +169,15 @@ public class DrawableCanvas : IDisposable {
                 break;
             case BrushActionType.Line:
                 if (hasPrev && prevAction.position1 == action.position0) {
-                    Vector2 midpoint = action.position0 + (prevAction.position1 - prevAction.position0) / 2;
-                    Vector2 midpoint2 = (action.position1 + action.position0) / 2;
-                    Vector2 key = Vector2.Lerp(midpoint, midpoint2, 0.65f);
-                    Vector2Int keyInt = new Vector2Int(Mathf.RoundToInt(key.x), Mathf.RoundToInt(key.y));
+                    Vector2 dir = (prevAction.position1 - prevAction.position0) / 2 + (action.position1 - action.position0) / 2;
+                    Vector2 keyA = action.position0 + dir / 3;
+                    Vector2 keyB = keyA + (action.position1 - action.position0) / 3;
+                    var keyAInt = new Vector2Int(Mathf.RoundToInt(keyA.x), Mathf.RoundToInt(keyA.y));
+                    var keyBInt = new Vector2Int(Mathf.RoundToInt(keyB.x), Mathf.RoundToInt(keyB.y));
+
                     DrawBezier(action.position0,
-                               keyInt,
-                               keyInt,
+                               keyAInt,
+                               keyBInt,
                                action.position1, action.color, action.size);
 
                     //DrawLine(action.position0, action.position1, Color.green, 0);
