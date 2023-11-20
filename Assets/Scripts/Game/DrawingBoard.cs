@@ -273,7 +273,8 @@ public class DrawingBoard : NetworkBehaviour {
     [ClientRpc]
     private void SendActionToClientRpc(BrushAction action) {
         //Ignore actions that came from ourselves
-        if (action.drawerId == Player.Local.NetworkObjectId) {
+        //Also ignore all rpcs if we are the server itself
+        if (action.drawerId == Player.Local.NetworkObjectId || IsServer) {
             return;
         }
 
