@@ -336,6 +336,7 @@ public class Paintbrush : MonoBehaviour {
             yield return null;
         } while (Input.GetKey(KeyCode.Mouse0));
 
+        action.isPreview = false;
         TryExecuteDraw(action, forceDraw: true);
     }
 
