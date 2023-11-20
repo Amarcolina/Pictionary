@@ -4,46 +4,39 @@ using UnityEngine.UI;
 
 public class PlayerLabel : MonoBehaviour {
 
-  [SerializeField]
-  private Text _nameLabel;
+    [SerializeField]
+    private Text _nameLabel;
 
-  [SerializeField]
-  private Text _scoreLabel;
+    [SerializeField]
+    private Text _scoreLabel;
 
-  [SerializeField]
-  private Color _defaultColor;
+    [SerializeField]
+    private Color _defaultColor;
 
-  [SerializeField]
-  private Color _drawingColor;
+    [SerializeField]
+    private Color _drawingColor;
 
-  [SerializeField]
-  private Color _spectatingColor;
+    [SerializeField]
+    private Color _spectatingColor;
 
-  [NonSerialized]
-  public Player player;
+    [NonSerialized]
+    public Player player;
 
-  private void Update() {
-    _nameLabel.text = player.GameName.Value.Value;
-    Color color = _defaultColor;
+    private void Update() {
+        _nameLabel.text = player.GameName.Value.Value;
+        Color color = _defaultColor;
 
-    switch (GameCoordinator.instance.CurrentState.Value) {
-      case GameCoordinator.GameState.Lobby:
-        _scoreLabel.text = "";
-        break;
-      case GameCoordinator.GameState.ClassicGame:
-        if (player.IsInGame.Value) {
-          _scoreLabel.text = player.Score.Value.ToString();
-          if (GameCoordinator.instance.DrawingPlayer == player) {
-            color = _drawingColor;
-          }
+        if (player.Score.Value > 0) {
+            _scoreLabel.text = player.Score.Value.ToString();
         } else {
-          _scoreLabel.text = "";
-          color = _spectatingColor;
+            _scoreLabel.text = "";
         }
-        break;
-    }
 
-    _nameLabel.color = color;
-    _scoreLabel.color = color;
-  }
+        if (GameCoordinator.instance.DrawingPlayer == player) {
+            color = _drawingColor;
+        }
+
+        _nameLabel.color = color;
+        _scoreLabel.color = color;
+    }
 }
