@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Unity.Jobs;
 using Unity.Collections;
@@ -25,6 +26,8 @@ public class DrawableCanvas : IDisposable {
     private bool _isDirty = false;
     private JobHandle? _scanlineJob;
     private bool _enableFloodFillPrecalculation;
+
+    private Dictionary<ulong, BrushAction> _prevActions = new();
 
     /// <summary>
     /// Constructs a new DrawableCanvas with a given width and height.
@@ -157,12 +160,27 @@ public class DrawableCanvas : IDisposable {
     /// Performs the given draw action on this canvas.s
     /// </summary>
     public void ApplyBrushAction(BrushAction action) {
+        bool hasPrev = _prevActions.TryGetValue(action.drawerId, out var prevAction);
+
         switch (action.type) {
             case BrushActionType.Clear:
                 Clear();
                 break;
             case BrushActionType.Line:
-                DrawLine(action.position0, action.position1, action.color, action.size);
+                if (hasPrev && prevAction.position1 == action.position0) {
+                    Vector2 midpoint = action.position0 + (prevAction.position1 - prevAction.position0) / 2;
+                    Vector2 midpoint2 = (action.position1 + action.position0) / 2;
+                    Vector2 key = Vector2.Lerp(midpoint, midpoint2, 0.65f);
+                    Vector2Int keyInt = new Vector2Int(Mathf.RoundToInt(key.x), Mathf.RoundToInt(key.y));
+                    DrawBezier(action.position0,
+                               keyInt,
+                               keyInt,
+                               action.position1, action.color, action.size);
+
+                    //DrawLine(action.position0, action.position1, Color.green, 0);
+                } else {
+                    DrawLine(action.position0, action.position1, action.color, action.size);
+                }
                 break;
             case BrushActionType.Box:
                 DrawBox(action.position0, action.position1, action.color, action.size);
@@ -186,6 +204,8 @@ public class DrawableCanvas : IDisposable {
             default:
                 throw new ArgumentException("Unexpected brush type " + action.type);
         }
+
+        _prevActions[action.drawerId] = action;
     }
 
     /// <summary>
@@ -208,6 +228,43 @@ public class DrawableCanvas : IDisposable {
 
                 UnsafeUtility.MemCpyReplicate(textureData.GetUnsafePtr(), colorSrc.GetUnsafePtr(), 4, textureData.Length);
                 colorSrc.Dispose();
+            }
+
+            _tex.Apply();
+            _isDirty = true;
+        }
+    }
+
+    public void DrawBezier(Vector2Int p0, Vector2Int p1, Vector2Int p2, Vector2Int p3, Color32 col, int size) {
+        Vector2Int EvalBezier(float t) {
+            Vector2 a = Vector2.Lerp(p0, p1, t);
+            Vector2 b = Vector2.Lerp(p1, p2, t);
+            Vector2 c = Vector2.Lerp(p2, p3, t);
+
+            Vector2 d = Vector2.Lerp(a, b, t);
+            Vector2 e = Vector2.Lerp(b, c, t);
+
+            Vector2 f = Vector2.Lerp(d, e, t);
+
+            return new Vector2Int(Mathf.RoundToInt(f.x), Mathf.RoundToInt(f.y));
+        }
+
+        using (new ProfilerSample("Draw Bezier")) {
+            NativeArray<Color32> texData = _tex.GetRawTextureData<Color32>();
+
+            for (int i = 0; i < 10; i++) {
+                float t0 = i / 10f;
+                float t1 = (i + 1) / 10f;
+
+                var s0 = EvalBezier(t0);
+                var s1 = EvalBezier(t1);
+
+                for (int dx = -size; dx <= size; dx++) {
+                    for (int dy = -size; dy <= size; dy++) {
+                        Vector2Int offset = new Vector2Int(dx, dy);
+                        drawLine(texData, s0 + offset, s1 + offset, col);
+                    }
+                }
             }
 
             _tex.Apply();
