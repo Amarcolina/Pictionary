@@ -18,22 +18,22 @@ public struct BrushAction : INetworkSerializable {
 
     public int x0 {
         get => _x0;
-        set => _x0 = (ushort)value;
+        set => _x0 = (short)value;
     }
 
     public int y0 {
         get => _y0;
-        set => _y0 = (ushort)value;
+        set => _y0 = (short)value;
     }
 
     public int x1 {
         get => _x1;
-        set => _x1 = (ushort)value;
+        set => _x1 = (short)value;
     }
 
     public int y1 {
         get => _y1;
-        set => _y1 = (ushort)value;
+        set => _y1 = (short)value;
     }
 
     public Color32 color {
@@ -65,8 +65,8 @@ public struct BrushAction : INetworkSerializable {
     private byte _size;
     private byte _type;
     private bool _isPreview;
-    private ushort _x0, _y0;
-    private ushort _x1, _y1;
+    private short _x0, _y0;
+    private short _x1, _y1;
     private float _time;
 
     public Vector2Int position0 {
