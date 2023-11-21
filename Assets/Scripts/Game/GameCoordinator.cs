@@ -447,17 +447,17 @@ public class GameCoordinator : NetworkBehaviour {
         _wordBankManager.SaveActiveWordBank();
 
         if (Player.All.Any(p => p.HasGuessed.Value)) {
-            //Drawing player gets 9 points as long as someone has guessed
-            //Plus 1 point for every player who guessed (which is at least 1)
-            DrawingPlayer.Score.Value += 9 + Player.All.Count(p => p.HasGuessed.Value);
+            //Drawing player gets 10 points as long as someone has guessed
+            //Plus 5 points for every additional player who guessed
+            DrawingPlayer.Score.Value += 5 + 5 * Player.All.Count(p => p.HasGuessed.Value);
 
             //All other players get points based on the order they guessed
-            //First to guess gets 10, next gets 9, and so on
+            //First to guess gets 10, next gets 8, and so on
             //A player that guesses always gets at least 1 point
             int points = 10;
             foreach (var player in Player.All.Where(p => p.HasGuessed.Value).OrderBy(p => p.guessTime)) {
                 player.Score.Value += points;
-                points = Mathf.Max(1, points - 1);
+                points = Mathf.Max(1, points - 2);
             }
         }
 
@@ -471,7 +471,7 @@ public class GameCoordinator : NetworkBehaviour {
         //Decrement the turn counter
         //And end the game if we have reached zero turns!
         TurnsLeft.Value--;
-        if (TurnsLeft.Value == 0) {
+        if (TurnsLeft.Value <= 0) {
             int maxScore = Player.InGame.Select(p => p.Score.Value).Max();
             var winners = Player.InGame.Where(p => p.Score.Value == maxScore);
             if (winners.Count() == 1) {
