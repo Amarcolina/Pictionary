@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 
 public struct BrushAction : INetworkSerializable {
 
@@ -161,6 +162,9 @@ public class Paintbrush : MonoBehaviour {
     private DrawingBoard _drawingBoard;
 
     [SerializeField]
+    private Slider _sizeSlider;
+
+    [SerializeField]
     [FormerlySerializedAs("board")]
     private RectTransform _board;
 
@@ -212,8 +216,8 @@ public class Paintbrush : MonoBehaviour {
     }
 
     private bool isInsideCanvas(Vector2Int cursor) {
-        return cursor.x >= 0 && cursor.x < _board.sizeDelta.x &&
-               cursor.y >= 0 && cursor.y < _board.sizeDelta.y;
+        return cursor.x >= 0 && cursor.x < _drawingBoard.ResolutionX &&
+               cursor.y >= 0 && cursor.y < _drawingBoard.ResolutionY;
     }
 
     private bool TryExecuteDraw(BrushAction action, bool forceDraw = false) {
@@ -231,6 +235,11 @@ public class Paintbrush : MonoBehaviour {
         StartCoroutine(controlCoroutine());
     }
 
+    public void SetBrushSize(float value) {
+        _size = value;
+        _sizeSlider.value = value;
+    }
+
     private void LateUpdate() {
         if (Player.Local == null) {
             return;
@@ -238,6 +247,7 @@ public class Paintbrush : MonoBehaviour {
 
         if (isInsideCanvas(CurrCursor)) {
             _size = Mathf.Clamp(_size - Input.mouseScrollDelta.y * _scrollSensitivity, 0, _maxBrushSize);
+            _sizeSlider.value = _size;
         }
 
         if (OnDraw != null && GameCoordinator.instance.CanPlayerDraw(Player.Local)) {
@@ -345,8 +355,10 @@ public class Paintbrush : MonoBehaviour {
 
     IEnumerator shapeCoroutine() {
         Vector2Int startCursor = CurrCursor;
+        var startingTool = _tool;
 
         while (Input.GetKey(KeyCode.Mouse0)) {
+            if (_tool != startingTool) yield break;
             var action = new BrushAction() {
                 type = (BrushActionType)_tool,
                 position0 = startCursor,
@@ -365,6 +377,7 @@ public class Paintbrush : MonoBehaviour {
             yield return null;
         }
 
+        if (_tool != startingTool) yield break;
         TryExecuteDraw(new BrushAction() {
             type = (BrushActionType)_tool,
             position0 = startCursor,
